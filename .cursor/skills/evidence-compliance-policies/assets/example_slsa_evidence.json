@@ -1,0 +1,48 @@
+{
+    "_type": "https://in-toto.io/Statement/v1",
+    "subject": [
+      {
+        "name": "oci://ctoa.jfrog.io/docker-local/github-jfrog-testing:49",
+        "digest": {
+          "sha256": "e2bf111f7f1130d45844d8535ed3768fcd8275f1ff002c365ebe3405823f7636"
+        }
+      }
+    ],
+    "predicateType": "https://slsa.dev/provenance/v1",
+    "predicate": {
+      "buildDefinition": {
+        "buildType": "https://actions.github.io/buildtypes/workflow/v1",
+        "externalParameters": {
+          "workflow": {
+            "ref": "refs/heads/main",
+            "repository": "https://github.com/<organization>/<repository>",
+            "path": ".github/workflows/build-publish-v3.yml"
+          }
+        },
+        "internalParameters": {
+          "github": {
+            "event_name": "push",
+            "repository_id": "791673954",
+            "repository_owner_id": "78722358",
+            "runner_environment": "github-hosted"
+          }
+        },
+        "resolvedDependencies": [
+          {
+            "uri": "git+https://github.com/<organization>/<repository>@refs/heads/main",
+            "digest": {
+              "gitCommit": "af4155ffbada2e21790cec3083c2ac95d1602f60"
+            }
+          }
+        ]
+      },
+      "runDetails": {
+        "builder": {
+          "id": "https://github.com/<organization>/<repository>/.github/workflows/build-publish-v3.yml@refs/heads/main"
+        },
+        "metadata": {
+          "invocationId": "https://github.com/<organization>/<repository>/actions/runs/21037058589/attempts/1"
+        }
+      }
+    }
+  }

@@ -1,0 +1,8 @@
+---
+description: Ask before using MCP servers
+alwaysApply: true
+---
+# MCP Server Usage
+
+If an MCP server is available for the task, ask the user whether to use it.
+Respect the user's choice before calling MCP tools.
