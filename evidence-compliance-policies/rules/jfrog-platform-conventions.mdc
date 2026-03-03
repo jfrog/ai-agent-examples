@@ -1,0 +1,15 @@
+---
+description: JFrog platform conventions for templates, policies and rules
+alwaysApply: false
+---
+# JFrog Platform Conventions
+
+- Always create and manage policies within a JFrog Project unless the user explicitly opts out.
+- templates, rules  and policies name format: 2-32 lowercase alphanumeric characters, must start with a letter.
+- templates, rules  and policies description format: 2-100 alphanumeric characters, must start with a letter.
+- Prefer using existing templates, rules and policies
+- Create policies in this order: template, rules, then policy.
+
+Templates reference: https://jfrog.com/help/r/jfrog-rest-apis/templates
+Rules reference: https://jfrog.com/help/r/jfrog-rest-apis/rules
+Policies reference: https://jfrog.com/help/r/jfrog-rest-apis/lifecycle-policies

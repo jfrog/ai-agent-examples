@@ -1,0 +1,7 @@
+---
+description: Ask user questions one at a time
+alwaysApply: true
+---
+# User Questions
+
+When you need information from the user, ask one question at a time.

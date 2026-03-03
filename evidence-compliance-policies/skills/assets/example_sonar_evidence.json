@@ -1,0 +1,53 @@
+{
+	"_type": "https://in-toto.io/Statement/v1",
+	"createdAt": "2025-08-21T07:55:53.849Z",
+	"createdBy": "SonarQube",
+	"markdown": "<h1>Quality Gate passed</h1>Computed on 2025-08-21T07:55:53.849619900Z<h3>Passed conditions</h3>Reliability Rating on new code <span style=\"color:grey\">(value 1 is greater than threshold 1)</span> <br> Security Rating on new code <span style=\"color:grey\">(value 1 is greater than threshold 1)</span> <br> Maintainability Rating on new code <span style=\"color:grey\">(value 1 is greater than threshold 1)</span> <br> Duplicated Lines Density on new code <span style=\"color:grey\">(value 0.0 is greater than threshold 3)</span> <br> Security Hotspots Reviewed on new code <span style=\"color:grey\">(value 0.0 is less than threshold 0)</span> <br> ",
+	"predicate": {
+		"gates": [
+			{
+				"conditions": [
+					{
+						"actualValue": "1",
+						"comparator": "GT",
+						"errorThreshold": "1",
+						"metricKey": "new_reliability_rating",
+						"status": "OK"
+					},
+					{
+						"actualValue": "1",
+						"comparator": "GT",
+						"errorThreshold": "1",
+						"metricKey": "new_security_rating",
+						"status": "OK"
+					},
+					{
+						"actualValue": "1",
+						"comparator": "GT",
+						"errorThreshold": "1",
+						"metricKey": "new_maintainability_rating",
+						"status": "OK"
+					},
+					{
+						"actualValue": "0.0",
+						"comparator": "GT",
+						"errorThreshold": "3",
+						"metricKey": "new_duplicated_lines_density",
+						"status": "OK"
+					},
+					{
+						"actualValue": "0.0",
+						"comparator": "LT",
+						"errorThreshold": "0",
+						"metricKey": "new_security_hotspots_reviewed",
+						"status": "OK"
+					}
+				],
+				"ignoredConditions": false,
+				"status": "OK",
+				"type": "QUALITY"
+			}
+		]
+	},
+	"predicateType": "https://sonarsource.com/evidence/sonarqube/v1"
+}
