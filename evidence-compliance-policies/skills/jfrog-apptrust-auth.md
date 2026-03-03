@@ -27,26 +27,14 @@ done
 
 ## Config File Location
 
-Credentials are stored at the **repository level** in `.jfrog/config`:
+Credentials are stored at the **repository level** in `.env`:
 
 ```
-{repo-root}/.jfrog/config
+{repo-root}/.env
 ```
+see .env.example as reference
 
-This ensures project isolation - each repository can have its own JFrog configuration without clashing with other projects.
-
-**Important**: Add `.jfrog/` to your `.gitignore` to avoid committing credentials.
-
-## Config File Format
-
-The config file is JSON format:
-
-```json
-{
-  "url": "https://mycompany.jfrog.io",
-  "token": "eyJ..."
-}
-```
+**Important**: Add `.env` to your `.gitignore` to avoid committing credentials.
 
 **Important**: Only access tokens are supported. Username/password authentication is NOT supported because the JFrog Access API (used for project creation) requires bearer token authentication.
 
@@ -55,11 +43,18 @@ The config file is JSON format:
 ### 1. Check for Existing Credentials
 
 ```bash
-# Check if config file exists and read it
-if [ -f .jfrog/config ]; then
-  JFROG_URL=$(cat .jfrog/config | jq -r '.url')
-  JFROG_TOKEN=$(cat .jfrog/config | jq -r '.token')
-  echo "Found existing credentials for: ${JFROG_URL}"
+# Check if .env file exists and read it
+if [ -f .env ]; then
+  JFROG_URL=$(grep '^JFROG_URL=' .env | cut -d '=' -f 2-)
+  JFROG_TOKEN=$(grep '^JFROG_TOKEN=' .env | cut -d '=' -f 2-)
+
+  if [ -n "$JFROG_URL" ] && [ -n "$JFROG_TOKEN" ]; then
+    echo "✓ Loaded credentials from .env"
+  else
+    echo "✗ .env found but missing JFROG_URL or JFROG_TOKEN"
+  fi
+else
+  echo "✗ No .env file found"
 fi
 ```
 
@@ -69,47 +64,33 @@ If credentials are found, **ask the user to confirm** before using them:
 
 > **Existing JFrog configuration found:**
 > 
-> - **URL**: `{jfrog-url}`
-> - **Token**: `****...****` (stored in `.jfrog/config`)
+> - **URL**: `{JFROG_URL}`
+> - **Token**: `****...****` (stored in `.env`)
 > 
 > Would you like to **use** these credentials or **change** them?
 
 **Wait for user response:**
 - If **"use"**: Validate existing credentials and proceed
-- If **"change"**: Prompt for new credentials (step 2)
+- If **"change"**: ask the user to set the right valuers inside .env file, create the file for him if missing
 
 ### 2. Prompt for Missing Credentials
 
-If `.jfrog/config` doesn't exist or is missing required fields, **interactively ask the user** through the chat:
+If `.env` doesn't exist or is missing required fields, **interactively ask the user** through the chat:
 
-> I need to connect to your JFrog Platform. Please provide the following:
->
-> 1. **JFrog Platform URL**: The base URL of your JFrog Platform (e.g., `https://mycompany.jfrog.io`)
-> 2. **Access Token**: An access token with admin privileges
->
+> I need to connect to your JFrog Platform. Please set JFROG_URL and JFROG_TOKEN valuers inside .env file, create the file for him if missing
+
 > You can generate an access token from: `https://your-platform.jfrog.io/ui/admin/configuration/security/access_tokens`
 
-**Wait for the user's response** before proceeding. The user will typically provide:
-- URL and token in the same message, or
-- One value at a time
+**Ask the customer if values have been set and can be checked** before proceeding. 
 
-Example user responses:
-```
-"URL is https://acme.jfrog.io and my token is eyJ..."
-```
-or
-```
-"https://acme.jfrog.io"
-"eyJhbGciOiJSUzI1NiIs..."
-```
+When the user answers yes, proceed
 
-Parse the user's response to extract the URL and token values.
 
 ### 3. Validate the Token
 
 Token validation requires two checks:
 1. **Authentication check** - Verify the token is valid
-2. **Platform Admin check** - Verify the token has platform admin privileges
+2. **Platform AppTrust check** - Verify the platform has AppTrust
 
 #### Step 3a: Validate Authentication
 
@@ -145,9 +126,9 @@ HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
   "${JFROG_URL}/apptrust/api/v1/applications")
 
 if [ "$HTTP_CODE" = "200" ]; then
-  echo "✓ Platform admin privileges confirmed"
+  echo "✓ Platform AppTrust existance confirmed"
 else
-  echo "✗ Platform admin check failed: HTTP ${HTTP_CODE}"
+  echo "✗ Platform AppTrust existance failed: HTTP ${HTTP_CODE}"
 fi
 ```
 
@@ -159,8 +140,7 @@ fi
 > - Create rules
 > - Create policies
 > 
-> Please provide an access token with platform admin privileges.
-> You can generate one from: `{jfrog-url}/ui/admin/configuration/security/access_tokens`
+> Please provide a platform with AppTrust for usign this skill.
 
 **If platform apptrust check fails with 403 or 401** (403, 401):
 > The provided access token does not have **AppTrust** priveledges.
@@ -174,31 +154,6 @@ fi
 > You can generate one from: `{jfrog-url}/ui/admin/configuration/security/access_tokens`
 
 **Only proceed if BOTH checks pass.**
-
-### 4. Save Credentials Securely
-
-After validation succeeds, save the credentials with restricted permissions:
-
-```bash
-# Create directory if it doesn't exist
-mkdir -p .jfrog
-
-# Write config file
-cat > .jfrog/config << EOF
-{
-  "url": "${JFROG_URL}",
-  "token": "${JFROG_TOKEN}"
-}
-EOF
-
-# Restrict permissions (owner read/write only)
-chmod 600 .jfrog/config
-
-# Add to .gitignore if not already present
-if ! grep -q "^\.jfrog/$" .gitignore 2>/dev/null; then
-  echo ".jfrog/" >> .gitignore
-fi
-```
 
 ## Health Check (Optional)
 
@@ -225,9 +180,10 @@ Use this to distinguish between:
 Once credentials are loaded, use them in API calls:
 
 ```bash
-# Load credentials from repo-level config
-JFROG_URL=$(cat .jfrog/config | jq -r '.url')
-JFROG_TOKEN=$(cat .jfrog/config | jq -r '.token')
+# Load credentials from .env config
+JFROG_URL=$(grep '^JFROG_URL=' .env | cut -d '=' -f 2-)
+JFROG_TOKEN=$(grep '^JFROG_TOKEN=' .env | cut -d '=' -f 2-)
+
 
 # Make authenticated API call
 curl -X POST "${JFROG_URL}/unifiedpolicy/api/v1/templates" \
@@ -239,16 +195,15 @@ curl -X POST "${JFROG_URL}/unifiedpolicy/api/v1/templates" \
 ## Security Notes
 
 1. **Never log or display the token** - mask it in any output
-2. **Config file permissions** - must be `600` (owner read/write only)
-3. **Don't commit credentials** - add `.jfrog/` to `.gitignore`
-4. **Token scope** - assume admin privileges but don't verify explicitly
+2. **.env file permissions** - must be `600` (owner read/write only)
+3. **Don't commit credentials** - add `.env` to `.gitignore`
 
 ## Future: User-Level Configuration
 
-Currently, all configuration is at the project level (`.jfrog/config`). In a future update, we will add support for user-level configuration at `~/.jfrog/config` with the following precedence:
+Currently, all configuration is at the project level (`.env`). In a future update, we will add support for user-level configuration at `~/.jfrog/.env` with the following precedence:
 
-1. Project-level `.jfrog/config` (highest priority)
-2. User-level `~/.jfrog/config` (fallback)
+1. Project-level `.env` (highest priority)
+2. User-level `~/.jfrog/env` (fallback)
 
 This will allow users to set a default JFrog configuration while still allowing project-specific overrides.
 

@@ -1,6 +1,6 @@
 ---
 description: JFrog platform conventions for templates, policies and rules
-alwaysApply: true
+alwaysApply: false
 ---
 # JFrog Platform Conventions
 

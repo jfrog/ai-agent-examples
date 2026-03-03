@@ -216,8 +216,8 @@ Confirm successful creation to the user and summarize what was created.
 
 | Field | Format |
 |-------|--------|
-| Name | 2-32 lowercase alphanumeric characters, must start with a letter |
-| Description | 2-100 alphanumeric characters, must start with a letter |
+| Name | 1-255 characters, must start with a letter |
+| Description | 2048 characters characters, must start with a letter |
 
 ## API Endpoints
 
