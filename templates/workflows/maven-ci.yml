@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      JF_PROJECT: "{{PROJECT_KEY}}"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: ${{ vars.JF_URL }}
+          JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
+
+      - name: Configure Maven client
+        run: |
+          jf mvnc \
+            --repo-resolve-releases {{PROJECT_KEY}}-maven \
+            --repo-resolve-snapshots {{PROJECT_KEY}}-maven \
+            --repo-deploy-releases {{PROJECT_KEY}}-maven-local \
+            --repo-deploy-snapshots {{PROJECT_KEY}}-maven-local
+
+      - name: Build and test
+        run: jf mvn clean install
+
+      - name: Deploy artifacts
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: jf mvn deploy -DskipTests

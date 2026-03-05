@@ -1,0 +1,13 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "virtual",
+  "packageType": "npm",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Virtual npm repository aggregating local and remote for {{PROJECT_KEY}}",
+  "repositories": [
+    "{{PROJECT_KEY}}-npm-local",
+    "{{PROJECT_KEY}}-npm-remote"
+  ],
+  "defaultDeploymentRepo": "{{PROJECT_KEY}}-npm-local",
+  "externalDependenciesEnabled": false
+}

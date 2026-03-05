@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      JF_PROJECT: "{{PROJECT_KEY}}"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: ${{ vars.JF_URL }}
+          JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
+
+      - name: Configure Go client
+        run: jf goc --repo-resolve {{PROJECT_KEY}}-go --repo-deploy {{PROJECT_KEY}}-go-local
+
+      - name: Build
+        run: jf go build ./...
+
+      - name: Test
+        run: go test ./...
+
+      - name: Publish module
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: jf go publish v0.0.0

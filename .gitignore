@@ -1,1 +1,36 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+
+# Credentials and environment
 .env
+.jfrog/
+config.txt
+jf-config.export
+*.jfrog-config
+
+# User-specific manifest files
+jfrog-manifest*.yaml
+manifest.yaml
+!templates/manifest-template.yaml
+
+# Temporary directories
+tmp/
+local/
+
+# Node.js
+node_modules/
+*.tgz
+package-lock.json
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*

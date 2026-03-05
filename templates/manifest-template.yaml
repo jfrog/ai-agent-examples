@@ -1,0 +1,310 @@
+# JFrog Onboarding Manifest -- Canonical Template
+# =================================================
+# This file documents EVERY supported property in the onboarding manifest.
+# Copy this file, fill in your values, and remove or comment out fields you
+# do not need. Fields marked [required] must be provided; all others are
+# optional and show their default values.
+#
+#
+# Usage:
+#   1. Copy this file to the project root (or any location)
+#   2. Fill in your JFrog URL and project details
+#   3. Set JFROG_ACCESS_TOKEN and JFROG_URL environment variables
+#   4. Ask the agent: "Onboard projects from my manifest"
+
+# ---------------------------------------------------------------------------
+# jfrog -- JFrog Platform settings (global)
+# ---------------------------------------------------------------------------
+jfrog:
+  # [required] JFrog Platform URL. Can also be set via JFROG_URL env var.
+  # Type: string (URL)
+  url: https://mycompany.jfrog.io
+
+  # [optional] Default password for newly created users.
+  # If users listed under members do not exist, the agent will offer to create
+  # them with this password. Users should change it on first login.
+  # SECURITY: Do not commit this value to git -- prefer .env or interactive prompt.
+  # Type: string
+  # Default: (prompt interactively if needed)
+  default_password: "ChangeMe123!"
+
+  # [optional] Xray settings -- global default applied to all projects.
+  # When enabled, local and remote repositories are added to Xray indexed resources
+  # after creation. Virtual repos are never indexed (Xray scans local/remote).
+  # Per-project overrides: set xray.enabled on individual project entries.
+  # Type: object
+  xray:
+    # [optional] Enable Xray indexing on local and remote repositories.
+    # Type: boolean
+    # Default: true
+    enabled: true
+
+  # [optional] Curation settings -- global default applied to all projects.
+  # When enabled, Curation is activated on remote repositories to vet and approve
+  # open-source packages before they are cached locally.
+  # Requires a JFrog subscription that supports Curation.
+  # Per-project overrides: set curation.enabled on individual project entries.
+  # Type: object
+  curation:
+    # [optional] Enable Curation on remote repositories.
+    # When enabled, Curation is activated on remote repos AND the standard set of
+    # curation policies (Block Malicious, CVE, License, Operational Risk) is created.
+    # Type: boolean
+    # Default: false
+    enabled: false
+
+    # [optional] Email address for curation policy violation notifications.
+    # Required when curation is enabled. If omitted, the agent will prompt interactively.
+    # Type: string (email)
+    notification_email: security@example.com
+
+# ---------------------------------------------------------------------------
+# github -- GitHub settings (global)
+# ---------------------------------------------------------------------------
+github:
+  # [optional] Branch name for PRs created in target repos during onboarding.
+  # Type: string
+  # Default: jfrog-onboarding
+  branch_name: jfrog-onboarding
+
+  # [optional] GitHub host. For GitHub Enterprise, set to your hostname.
+  # Type: string (hostname, without https://)
+  # Default: github.com
+  host: github.com
+
+  # [optional] Authentication method for CI workflows:
+  #   true  -- Use OIDC (secretless) authentication. Requires an Enterprise X or
+  #            Enterprise+ JFrog subscription. If OIDC is not supported by the
+  #            platform, onboarding will ABORT with an error.
+  #   false -- Use secrets-based authentication (JF_ACCESS_TOKEN GitHub secret).
+  #            Works with any JFrog subscription tier.
+  # Type: boolean
+  # Default: false
+  oidc_setup: false
+
+# ---------------------------------------------------------------------------
+# state -- Where to persist the manifest after onboarding (audit trail)
+# ---------------------------------------------------------------------------
+state:
+  # [optional] Storage backend for manifest persistence.
+  # Values: "artifactory" or "git"
+  # Type: string
+  # Default: artifactory
+  destination: artifactory
+
+  # [optional] Artifactory settings (used when destination = artifactory).
+  # The agent creates a platform-admin-only project and generic repo to store
+  # timestamped manifest snapshots.
+  # Type: object
+  artifactory:
+    # [optional] JFrog project key to store manifests in.
+    # Type: string
+    # Default: system
+    project: system
+
+    # [optional] Repository key within the project.
+    # Type: string
+    # Default: system-configuration
+    repository: system-configuration
+
+  # [optional] Git settings (used when destination = git).
+  # The agent commits and pushes manifest snapshots to a git repository.
+  # Type: object
+  git:
+    # [required if destination = git] Git repository in owner/repo format.
+    # Uses the github.host setting for the hostname.
+    # Type: string
+    repo: myorg/jfrog-config
+
+    # [optional] Directory path within the repo to store manifests.
+    # Manifests are stored as <path>/<timestamp>/jfrog-configuration-manifest.yaml
+    # Type: string
+    # Default: / (repository root)
+    path: manifests/
+
+    # [optional] Branch to commit and push to.
+    # Type: string
+    # Default: main
+    branch: main
+
+# ---------------------------------------------------------------------------
+# jfrog_projects -- List of JFrog projects to create and onboard
+# ---------------------------------------------------------------------------
+# At least one project entry is required.
+# Each project entry triggers the full skill chain:
+#   provision -> create repos -> add members -> OIDC -> package managers -> CI
+jfrog_projects:
+  - # [required] Project key. Must be 2-32 lowercase alphanumeric characters,
+    # starting with a letter. This is the unique identifier in JFrog.
+    # Type: string
+    project_key: myproject
+
+    # [optional] Human-readable display name for the project.
+    # Type: string
+    # Default: title-cased project_key (e.g., "myproject" -> "Myproject")
+    display_name: "My Project"
+
+    # [optional] Project description.
+    # Type: string
+    # Default: (empty)
+    description: "Description of the project"
+
+    # [optional] Xray settings -- per-project override.
+    # Omit to inherit the global jfrog.xray.enabled value.
+    # Type: object
+    xray:
+      # [optional] Override global Xray setting for this project.
+      # Type: boolean
+      # Default: (inherits from jfrog.xray.enabled, which defaults to true)
+      enabled: true
+
+    # [optional] Curation settings -- per-project override.
+    # Omit to inherit the global jfrog.curation.enabled value.
+    # Type: object
+    curation:
+      # [optional] Override global Curation setting for this project.
+      # Type: boolean
+      # Default: (inherits from jfrog.curation.enabled, which defaults to false)
+      enabled: false
+
+      # [optional] Override global notification email for this project's curation policies.
+      # Type: string (email)
+      # Default: (inherits from jfrog.curation.notification_email)
+      notification_email: project-security@example.com
+
+    # [optional] GitHub repositories associated with this project.
+    # Format: owner/repo (e.g., myorg/my-app).
+    # If omitted, package-manager config, CI workflow, and OIDC steps are skipped.
+    # Type: list of strings
+    github_repos:
+      - myorg/my-app
+      - myorg/my-lib
+
+    # [optional] Package ecosystems used by this project.
+    # For each ecosystem, a standard trio of repositories is auto-generated:
+    #   local ({key}-{eco}-local), remote ({key}-{eco}-remote), virtual ({key}-{eco}).
+    # Valid values: npm, maven, pip, go, docker, helm
+    # If omitted but github_repos are provided, the agent offers to auto-detect.
+    # Can be combined with 'repositories' below -- see merge logic.
+    # Type: list of strings
+    ecosystems:
+      - npm
+      - maven
+      - pip
+      - go
+      - docker
+      - helm
+
+    # [optional] Custom repository definitions for this project.
+    # Use this to create additional repos beyond the ecosystem-generated ones,
+    # or to override properties of ecosystem-generated repos.
+    #
+    # Merge logic when both 'ecosystems' and 'repositories' are set:
+    #   1. Standard repos are generated from ecosystems first
+    #   2. Each entry in repositories is then processed:
+    #      - If its key matches an ecosystem-generated repo, it OVERRIDES that repo's
+    #        properties (e.g., customize description, xray_index, or add extra fields)
+    #      - If its key is new, it is created as an additional repo
+    #   3. Virtual repos can reference both ecosystem-generated and custom repo keys
+    #      in aggregated_repos
+    #
+    # When only 'repositories' is set (no ecosystems): create exactly what is listed.
+    # When only 'ecosystems' is set (no repositories): auto-generate standard trios.
+    # When neither is set: skip repo creation for this project.
+    #
+    # Type: list of objects
+    repositories:
+      - # [required] Repository key. Must be unique within the project.
+        # Type: string
+        key: myproject-npm-release
+
+        # [required] Repository class: local, remote, or virtual.
+        # Type: string (one of: local, remote, virtual)
+        type: local
+
+        # [required] Package type.
+        # Type: string (e.g., npm, maven, pypi, go, docker, helm, generic)
+        package_type: npm
+
+        # [optional] Repository description.
+        # Type: string
+        description: "Release-only npm repo"
+
+        # [optional] Enable Xray indexing on this repository.
+        # Only applies to local and remote repos (virtual repos are never indexed).
+        # Type: boolean
+        # Default: inherits from project xray.enabled
+        xray_index: true
+
+      - # Example: remote repo with a custom upstream URL
+        key: myproject-thirdparty-remote
+        type: remote
+        package_type: generic
+        description: "Third-party releases"
+        xray_index: false
+
+        # [required for remote] Upstream URL to proxy.
+        # Type: string (URL)
+        url: https://third-party.example.com/releases
+
+      - # Example: virtual repo aggregating ecosystem and custom repos
+        key: myproject-npm-all
+        type: virtual
+        package_type: npm
+
+        # [required for virtual] List of repo keys to aggregate.
+        # Can reference ecosystem-generated repos and/or custom repos from this list.
+        # Type: list of strings
+        aggregated_repos:
+          - myproject-npm-local       # ecosystem-generated
+          - myproject-npm-remote      # ecosystem-generated
+          - myproject-npm-release     # custom repo above
+
+        # [optional for virtual] Local repo key to use for deployments.
+        # Type: string
+        default_deployment_repo: myproject-npm-release
+
+    # [optional] Project members -- users and groups with role assignments.
+    # If omitted, the member-assignment step is skipped for this project.
+    # Type: object
+    members:
+      # [optional] Users to add to the project.
+      # Type: list of objects
+      users:
+        - # [required] Username in the JFrog Platform.
+          # Type: string
+          name: alice
+
+          # [required] Role to assign in this project.
+          # Valid values: Project Admin, Developer, Contributor, Viewer
+          # (Custom project roles are also supported -- use the exact role name.)
+          # Type: string
+          role: Developer
+
+          # [optional] Email address. Used when creating the user if they do not
+          # exist. If omitted, auto-derived from username.
+          # Type: string
+          email: alice@example.com
+
+          # [optional] Platform groups to assign the user to on creation.
+          # Only used when the user does not exist and is being created.
+          # Type: list of strings
+          groups:
+            - frontend-team
+
+      # [optional] Groups to add to the project.
+      # Type: list of objects
+      groups:
+        - # [required] Group name in the JFrog Platform.
+          # Type: string
+          name: frontend-team
+
+          # [required] Role to assign in this project.
+          # Valid values: Project Admin, Developer, Contributor, Viewer
+          # Type: string
+          role: Contributor
+
+          # [optional] Group description. Used when creating the group if it
+          # does not exist.
+          # Type: string
+          description: "Frontend developers"

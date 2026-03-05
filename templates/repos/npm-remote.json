@@ -1,0 +1,9 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "remote",
+  "packageType": "npm",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Remote npm repository proxying npmjs.org for {{PROJECT_KEY}}",
+  "url": "https://registry.npmjs.org",
+  "xrayIndex": {{XRAY_INDEX}}
+}

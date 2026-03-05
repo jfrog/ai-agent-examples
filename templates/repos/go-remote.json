@@ -1,0 +1,9 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "remote",
+  "packageType": "go",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Remote Go repository proxying proxy.golang.org for {{PROJECT_KEY}}",
+  "url": "https://proxy.golang.org",
+  "xrayIndex": {{XRAY_INDEX}}
+}

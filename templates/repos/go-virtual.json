@@ -1,0 +1,14 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "virtual",
+  "packageType": "go",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Virtual Go repository aggregating local and remote for {{PROJECT_KEY}}",
+  "repositories": [
+    "{{PROJECT_KEY}}-go-local",
+    "{{PROJECT_KEY}}-go-remote"
+  ],
+  "defaultDeploymentRepo": "{{PROJECT_KEY}}-go-local",
+  "externalDependenciesEnabled": true,
+  "externalDependenciesPatterns": ["**"]
+}

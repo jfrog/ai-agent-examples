@@ -1,0 +1,39 @@
+{
+  "name": "@jfrog/ai-agent-examples",
+  "version": "1.0.0",
+  "description": "JFrog AI agent skills and rules for coding assistants -- Artifactory, Xray, Access, CLI, onboarding, and more",
+  "license": "MIT",
+  "files": [
+    "skills",
+    "rules",
+    "templates",
+    "README.md"
+  ],
+  "keywords": [
+    "jfrog",
+    "artifactory",
+    "xray",
+    "skills",
+    "agent-skills",
+    "skill-md",
+    "cursor",
+    "claude-code",
+    "copilot",
+    "windsurf",
+    "cline",
+    "ai-assistant",
+    "ai-agent",
+    "coding-assistant",
+    "onboarding"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jfrog/ai-agent-examples.git"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

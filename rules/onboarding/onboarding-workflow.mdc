@@ -1,0 +1,216 @@
+---
+description: Orchestration guidance for multi-project JFrog onboarding workflow
+alwaysApply: true
+---
+
+# Onboarding Workflow Guidance
+
+## Skill Chain Order
+
+Always follow this sequence when onboarding a project:
+
+**Pre-project step** (run once before any projects):
+0. **Detect existing patterns** -- after prerequisites pass, query the platform for existing projects and repositories via the `detect-existing-patterns` skill. If existing naming patterns are found that differ from the standard convention, present both the detected and standard options with concrete examples and let the user choose. The chosen `naming_pattern` applies to all projects in the current onboarding run. If the platform is empty or existing repos already follow the standard pattern, skip the question and use the standard pattern.
+
+**Per-project steps** (repeat for each project in the manifest):
+1. **Provision project** -- create JFrog project if it does not exist
+2. **Create repositories** -- from ecosystems (auto-generated trios), custom `repositories` list, or both (smart merge); conditionally enable Xray indexing and Curation (`curated: true` flag) based on manifest settings. Pass the `naming_pattern` from step 0 to control how ecosystem-generated repo names are constructed.
+3. **Add members** -- users and groups with appropriate roles
+4. **OIDC setup** -- configure OIDC provider and identity mappings (controlled by `github.oidc_setup` in manifest; if `true` and subscription does not support it, **abort**)
+5. **Configure package managers** -- update configs in the GitHub repos for local dev
+6. **Configure CI workflows** -- modify GitHub Actions for Artifactory integration (uses OIDC if `github.oidc_setup: true`, otherwise secrets-based auth)
+
+**Post-project steps** (run once after all projects):
+7. **Curation policies** -- if any project has `curation.enabled: true`, invoke `jfrog-curation-onboarding` in automated mode to create the 8 standard curation policies (Block Malicious + 7 dry-run). Uses `all_repos` scope when all projects have curation enabled, or `specific_repos` scope when only some do. Notification email comes from `jfrog.curation.notification_email` (or per-project override).
+8. **Persist manifest** -- store final manifest to the configured state backend (Artifactory or git)
+
+## State Persistence
+
+Onboarding manifests are persisted for audit trail and reconciliation. The `state.destination` key in the manifest controls where manifests are stored:
+
+### Artifactory backend (default)
+
+Uses a dedicated JFrog project and generic repository. Configurable via `state.artifactory.project` (default: `system`) and `state.artifactory.repository` (default: `system-configuration`).
+
+- **Before onboarding starts** (after credentials pass): ensure the project + repo exist, check for prior manifests, and offer the user the choice to retrieve the latest or start fresh.
+- **After onboarding completes**: upload the final manifest to `<repo>/<timestamp>/jfrog-configuration-manifest.yaml`.
+- The state project is **platform-admin-only** -- no users or groups are ever added to it.
+
+### Git backend
+
+Stores manifests in a git repository. Configurable via `state.git.repo`, `state.git.path`, and `state.git.branch`.
+
+- **Before onboarding starts**: verify the git repo is accessible, check for prior manifests in the configured path.
+- **After onboarding completes**: commit and push the final manifest to `<path>/<timestamp>/jfrog-configuration-manifest.yaml`.
+
+See the `jfrog-system-config-repo` skill for implementation details.
+
+## Custom Repositories and Smart Merge
+
+Each project in the manifest can define repositories in two ways:
+- **`ecosystems`** -- auto-generates standard trios (local + remote + virtual) per ecosystem
+- **`repositories`** -- explicit custom repo definitions with full control over properties
+
+When both are present, the agent performs a **smart merge**:
+1. Generate ecosystem trios first
+2. Process custom `repositories` entries: if a key matches an ecosystem-generated repo, the custom definition **overrides** that repo's properties; if the key is new, it is added as an additional repo
+3. Virtual repos can reference both ecosystem-generated and custom repo keys in `aggregated_repos`
+
+When only `ecosystems` is set: auto-generate standard trios (current behavior).
+When only `repositories` is set: create exactly what is listed, no auto-generation.
+When neither is set: skip repo creation for that project.
+
+See the `jfrog-create-repos` skill for the merge logic and custom repo JSON payload construction.
+
+## Xray and Curation Settings
+
+The manifest supports Xray and Curation controls at two levels:
+
+- **Global defaults** under `jfrog.xray.enabled` and `jfrog.curation.enabled`
+- **Per-project overrides** under `jfrog_projects[].xray.enabled` and `jfrog_projects[].curation.enabled`
+
+**Resolution logic**: per-project value wins if present; otherwise fall back to global; if neither is set, default to `true` for Xray and `false` for Curation.
+
+When creating repositories, the resolved `xray_enabled` controls the `{{XRAY_INDEX}}` placeholder in repo JSON templates and whether Xray indexing API calls are made. The resolved `curation_enabled` controls whether Curation is enabled on remote repos (`curated: true` flag).
+
+### Curation Policies
+
+When `curation_enabled` resolves to `true` for any project, the onboarding workflow also creates **curation policies** via the `jfrog-curation-onboarding` skill (automated mode). This happens as a post-project step after all per-project steps complete.
+
+- **Notification email**: configured via `jfrog.curation.notification_email` (global) or `jfrog_projects[].curation.notification_email` (per-project override). Required when curation is enabled.
+- **Scope**: `all_repos` when all projects have curation enabled; `specific_repos` when only some do.
+- **Idempotency**: existing policies (409) are treated as success; `specific_repos` policies are updated to include new repos from subsequent onboarding runs.
+
+## Manifest-Driven Approach
+
+The manifest YAML is the single source of truth for all onboarding configurations. See `templates/manifest-template.yaml` for the canonical schema with all supported properties.
+
+If the user explicitly provides a manifest file path, use it directly. Otherwise, if a manifest file is found locally (e.g., in the repository root or `templates/` directory), **do not assume it should be used**. Instead, ask the user whether to:
+- Use the found manifest file, or
+- Enter project details manually in an interactive session
+
+Only proceed with the manifest after the user explicitly confirms it should be used.
+
+When using a manifest, process each project entry in order.
+
+### Manifest URL Mismatch Check
+
+When a local manifest file is found (e.g., `jfrog-manifest.yaml`), **always compare** its `jfrog.url` value against the active `$JFROG_URL` from the environment (or `.env` file). If they differ, the manifest belongs to a **different JFrog instance** and must **not** be modified or appended to:
+
+- **Do not** add new project entries to a manifest targeting a different instance.
+- **Do not** use the manifest as the basis for the current onboarding session.
+- Instead, treat this as if no applicable manifest exists and either:
+  - Create a **new** manifest file (e.g., based on the instance hostname) for the active instance, or
+  - Enter interactive mode to collect inputs fresh.
+- Inform the user: "Found `<path>` but it targets `<manifest-url>`, while the active JFrog instance is `<env-url>`. Creating a new manifest for the active instance."
+
+This prevents cross-instance contamination where projects from one JFrog instance end up in the manifest of another.
+
+**Interactive Mode**: If no manifest is used (either none was found, the user chose interactive input, or the found manifest targets a different instance), the orchestration skill (`jfrog-project-onboarding`) collects inputs interactively, one question at a time (per the `interaction-questions` rule). At minimum, one project key is required. GitHub repos, ecosystems, members, OIDC, Xray, and Curation are all optional. The agent assembles collected answers into a YAML manifest file (same schema as `manifest-template.yaml`), writes it to disk, and displays it for user confirmation before proceeding. This ensures every onboarding run produces a reproducible manifest artifact.
+
+## Reconciliation (Update Mode)
+
+When the user wants to update JFrog configuration based on manifest changes:
+
+**Manifest source rules for reconciliation**:
+- **Desired manifest**: must be **explicitly provided by the user** (they give the file path). The agent must **never** auto-discover or use locally found manifest files for reconciliation. If the user does not specify a file, ask them for one. The only exception is when the user chose "Retrieve latest and update" in the pre-flight check -- in that case the downloaded state file is presented for editing and the user confirms the edited path.
+- **Baseline**: must come from the **configured state backend** (Artifactory or git). Never use locally found files as a baseline.
+
+1. **Baseline retrieval** (like `terraform plan`): Before reading live JFrog state, the agent retrieves the latest stored manifest from the configured state backend (Artifactory or git, based on `state.destination`) to use as a **baseline** -- the last-applied state. If no stored manifest exists, the agent proceeds with a live-only comparison (2-way diff).
+2. The `jfrog-reconcile-manifest` skill compares the **user-provided desired manifest** against the **baseline from the state backend** and the **live JFrog state**, computing a diff and presenting changes. When a baseline is available, it produces a **3-way comparison**:
+   - **Manifest changes**: what the user intentionally changed (baseline → desired)
+   - **Drift**: what changed in the live platform since the last apply (baseline → live)
+   - **Planned actions**: the net operations needed (desired → live)
+3. The user approves the changes before any modifications are applied
+4. Only delta operations are executed -- unchanged resources are left alone
+5. The final manifest is persisted to the configured state backend after reconciliation
+
+This flow is triggered when the user says things like "update JFrog from manifest", "reconcile manifest changes", or chooses "Retrieve latest and update" during the pre-flight manifest check.
+
+## Git Operations
+
+- The user's local git is assumed to be already configured (SSH keys or credential helper)
+- For reading/writing files in remote repos, shallow-clone the repo into a temp directory under `/tmp`, make changes, push a branch, then clean up
+- Always create changes on a feature branch (e.g., `jfrog-onboarding`) -- never push directly to main/master
+- After pushing the branch, instruct the user to open a PR manually -- do **not** attempt to create PRs programmatically
+- To verify a remote repository is accessible, use `git ls-remote`
+
+## Prerequisites Check
+
+Before starting any onboarding, **all** prerequisites below must pass. If **any** check fails, **abort immediately** -- do not proceed with partial onboarding. Report which check(s) failed and guide the user to fix them before retrying.
+
+1. **JFrog credentials**: `JFROG_URL` and `JFROG_ACCESS_TOKEN` are available -- either as environment variables **or** in a `.env` file at the repository root. If not set in the environment, source the `.env` file:
+   ```bash
+   if [ -z "$JFROG_URL" ] || [ -z "$JFROG_ACCESS_TOKEN" ]; then
+     if [ -f .env ]; then
+       set -a; source .env; set +a
+     fi
+   fi
+   ```
+   After sourcing, confirm both variables are non-empty. If still missing, **abort**.
+
+2. **Token authentication**: Verify the access token is valid by calling an authenticated endpoint (run with `required_permissions: ["full_network"]`):
+   ```bash
+   HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+     -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+     "$JFROG_URL/artifactory/api/system/version")
+   ```
+   HTTP 200 = success. Any other code = token is invalid or platform is unreachable. **Abort** if this fails.
+
+3. **Platform admin privileges** (MANDATORY -- abort if not admin): Verify the token has **platform admin** privileges by calling an admin-only endpoint (run with `required_permissions: ["full_network"]`):
+   ```bash
+   HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+     -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+     "$JFROG_URL/access/api/v1/config/security/authentication/basic_authentication_enabled")
+   ```
+   HTTP 200 = admin confirmed. If this fails (401/403), the token does not have admin privileges. **Abort immediately** -- do not proceed with any onboarding steps. Guide the user:
+   > The provided token does not have **platform admin** privileges. This is required for onboarding. Generate an admin token from: `{jfrog-url}/ui/admin/configuration/security/access_tokens`
+
+4. **Subscription type + OIDC gating**: Read `github.oidc_setup` from the manifest (`true` or `false`, defaults to `false`). Then check the JFrog subscription (run with `required_permissions: ["full_network"]`):
+   ```bash
+   SUBSCRIPTION_TYPE=$(curl -s -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+     "$JFROG_URL/artifactory/api/system/license" | jq -r '.subscriptionType')
+   ```
+   OIDC is supported if `subscriptionType` starts with `enterprise_xray` or `enterprise_plus`.
+   - If `github.oidc_setup: true` and the subscription **does not** support OIDC: **abort immediately** and tell the user to either upgrade their subscription or set `github.oidc_setup: false`.
+   - If `github.oidc_setup: false`: skip OIDC regardless of subscription; use secrets-based auth for CI.
+   - Store `OIDC_SETUP` and `OIDC_AVAILABLE` for later use by the OIDC skill and CI workflow skill.
+
+5. **Tools installed**: `jq` and `yq` are available
+
+### Manifest Validation (Post-Parse)
+
+After parsing the manifest (or receiving interactive input), and **before creating anything**, run these additional validations. Every check must pass -- if **any** fails, **abort immediately**.
+
+6. **GitHub repositories exist**: For every repository listed under `github_repos` across all projects in the manifest, verify the repository exists and is accessible:
+   ```bash
+   GITHUB_HOST="https://github.com"  # or from manifest github.host
+   git ls-remote "${GITHUB_HOST}/${REPO}.git" HEAD 2>/dev/null
+   ```
+   Run with `required_permissions: ["all"]` (git may need keychain/SSH agent access). Check **all** repos and collect **all** failures. If **any** repo does not exist or is not accessible, **abort** and list every missing/inaccessible repo so the user can fix them all at once. **Do not create any JFrog projects, repositories, or other resources until every GitHub repo is confirmed to exist.**
+
+7. **Users and groups exist -- or offer to create them**: For every user and group listed under `members` across all projects, verify they exist in the JFrog Platform **before** assigning them:
+   ```bash
+   # Check user exists
+   curl -s -o /dev/null -w '%{http_code}' \
+     -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+     "$JFROG_URL/access/api/v2/users/$JFROG_USER_NAME"
+   # Expect 200. 404 means user does not exist.
+
+   # Check group exists
+   curl -s -o /dev/null -w '%{http_code}' \
+     -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+     "$JFROG_URL/access/api/v2/groups/$GROUPNAME"
+   # Expect 200. 404 means group does not exist.
+   ```
+   Run with `required_permissions: ["full_network"]`. Check **all** users and groups across **all** projects and collect **all** failures. If any are missing:
+   - **Display** every missing user/group in a clear list
+   - **Offer to create them** using the `jfrog-create-users-groups` skill:
+     - Use `jfrog.default_password` from the manifest as the initial password for new users (prompt interactively if not set)
+     - Use optional `email` and `groups` fields from user entries in the manifest
+     - Create groups **first**, then users (so group membership assignments work during user creation)
+   - If the user **accepts**, create the missing users/groups, then **re-validate** all exist before proceeding
+   - If the user **declines**, **abort** onboarding and list what needs to be created manually
+   - **Do not create any JFrog projects, repositories, or other resources until every user and group is confirmed to exist**
+
+**Abort policy**: If any of checks 1-6 above fail, **stop all onboarding work immediately**. Do not attempt any JFrog provisioning, repository creation, or Git operations. Clearly report which prerequisite(s) failed and what the user needs to do to fix them. Only proceed once the user confirms the issue is resolved and all checks pass on a fresh re-run. For check 7 (users/groups), the agent offers to create missing entities before aborting -- see the `jfrog-create-users-groups` skill.

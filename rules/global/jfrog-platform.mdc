@@ -1,0 +1,186 @@
+---
+description: JFrog Platform API conventions, authentication, and URL patterns for all JFrog operations
+alwaysApply: true
+---
+
+# JFrog Platform Conventions
+
+## Environment Variables
+
+All JFrog operations expect these env vars:
+- `JFROG_URL` -- Platform base URL (e.g., `https://mycompany.jfrog.io`)
+- `JFROG_ACCESS_TOKEN` -- Platform Admin scoped access token
+
+### Loading from `.env` file
+
+If the variables are not already set in the environment, look for a `.env` file in the **repository root** and source it. The `.env` file format uses one `KEY=VALUE` per line (no `export` keyword needed):
+
+```
+JFROG_URL=https://mycompany.jfrog.io
+JFROG_ACCESS_TOKEN=eyJ...
+```
+
+Before every JFrog operation, run this loading snippet to ensure the variables are available:
+
+```bash
+# Load .env if vars are not already set
+if [ -z "$JFROG_URL" ] || [ -z "$JFROG_ACCESS_TOKEN" ]; then
+  if [ -f .env ]; then
+    set -a
+    source .env
+    set +a
+  fi
+fi
+```
+
+Priority: environment variables already set in the shell take precedence over `.env` values. The `.env` file is only sourced when one or both vars are missing.
+
+**Security**: Never commit the `.env` file to git. Ensure `.env` is listed in `.gitignore`.
+
+### Token Validation
+
+Before any JFrog provisioning, validate the token in two steps:
+
+1. **Authentication check** -- verify the token is valid:
+   ```bash
+   curl -s -o /dev/null -w "%{http_code}" \
+     -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+     "$JFROG_URL/artifactory/api/system/version"
+   ```
+   Expect HTTP 200. Any other code means the token is invalid or the platform is unreachable.
+
+2. **Platform admin check** -- verify the token has admin privileges:
+   ```bash
+   curl -s -o /dev/null -w "%{http_code}" \
+     -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+     "$JFROG_URL/access/api/v1/config/security/authentication/basic_authentication_enabled"
+   ```
+   Expect HTTP 200. A 401/403 means the token lacks platform admin privileges.
+
+Both checks must pass. If authentication fails, check the token and URL. If the admin check fails, **abort immediately** -- do not proceed with any operations. The token **must** be a platform admin token. Generate one from: `{jfrog-url}/ui/admin/configuration/security/access_tokens`.
+
+### Connectivity Check
+
+Before any JFrog API call, verify connectivity. This command requires network access, so use `required_permissions: ["full_network"]` in the Shell tool:
+```bash
+curl -sf -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" "$JFROG_URL/artifactory/api/v1/system/readiness"
+```
+
+### Sandbox Permissions Reference
+
+When running commands from Cursor, use the appropriate `required_permissions`:
+- **JFrog API calls** (`curl`, `jf` CLI): use `["full_network"]`
+- **Git operations** that may need SSH agent or credential helper access: use `["all"]`
+- **Package installs** (`npm install`, `pip install`, etc.): use `["full_network"]`
+
+## REST API Patterns
+
+| Domain | Base Path | Example |
+|--------|-----------|---------|
+| Projects | `$JFROG_URL/access/api/v1/projects` | Create/list/update projects |
+| Repositories | `$JFROG_URL/artifactory/api/repositories` | Create/update repos |
+| Users (platform) | `$JFROG_URL/access/api/v2/users` | Create/get/list/delete platform users |
+| Groups (platform) | `$JFROG_URL/access/api/v2/groups` | Create/get/list/delete platform groups |
+| Users in project | `$JFROG_URL/access/api/v1/projects/{key}/users/{name}` | Add user to project |
+| Groups in project | `$JFROG_URL/access/api/v1/projects/{key}/groups/{name}` | Add group to project |
+
+Auth header: `Authorization: Bearer $JFROG_ACCESS_TOKEN`
+Content-Type: `application/json`
+
+## Platform Conventions
+
+- Always create and manage repositories within a JFrog Project unless the user explicitly opts out.
+- Project key format: 2-32 lowercase alphanumeric characters, must start with a letter.
+- Clients must use virtual repository endpoints for all reads and writes.
+- For each package type, create and wire a remote + local + virtual set.
+- Create repositories in this order: remote, local, then virtual.
+- All user clients should be updated to use the virtual repository URL unless user explicitly sets a different URL.
+
+Reference: https://docs.jfrog.com/projects/docs/create-a-project
+
+## Repository Naming Convention
+
+The **standard** (default) pattern is: `{project-key}-{ecosystem}-{type}`
+- Example: `myproj-npm-local`, `myproj-npm-remote`, `myproj-npm` (virtual)
+- Types: `local` (internal artifacts), `remote` (proxy upstream), virtual name has no suffix (aggregates local + remote)
+
+### Pattern Detection Override
+
+Before creating repositories, the `detect-existing-patterns` skill queries the platform for existing projects and repos. If an established naming convention is found that differs from the standard (e.g., different separator, explicit virtual suffix, or alternative ecosystem tokens), the user is presented with both options and chooses one.
+
+The chosen `naming_pattern` (an object with `separator`, `virtual_suffix`, `type_map`, and `eco_map` fields) is passed to `jfrog-create-repos` and applies consistently to all ecosystem-generated repos in the onboarding session. Custom repos defined explicitly in the manifest `repositories` list always use their own `key` values regardless of the pattern.
+
+If the platform is empty or existing repos already follow the standard pattern, no question is asked and the standard pattern is used.
+
+## Shell Variable Naming
+
+**Never** use `USERNAME` as a shell variable name -- not as a global, not as a `local`, and not as a function parameter. On macOS and Linux, `$USERNAME` is a reserved environment variable that resolves to the current OS login name. Using it in any context (including `local USERNAME=...` inside a function) can cause silent collisions where the system value leaks through. Use descriptive, project-prefixed names to avoid collisions with system variables:
+
+| Instead of | Use |
+|------------|-----|
+| `$USERNAME` | `$JFROG_USER_NAME` |
+| `local USERNAME=$1` | `local UNAME=$1` or `local JFROG_USER_NAME=$1` |
+
+## Safe API Call Pattern
+
+**Never pipe `curl` output directly to `jq`**. API responses may contain non-JSON content (HTML error pages, rate-limit responses) or control characters that crash `jq`. Always capture the HTTP status code first and only parse the body on success.
+
+### Standard pattern -- capture status and body separately
+
+```bash
+HTTP_CODE=$(curl -s -o /tmp/api-resp.json -w "%{http_code}" \
+  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+  "$JFROG_URL/some/api/endpoint")
+
+if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
+  RESULT=$(jq -r '.field' /tmp/api-resp.json)
+else
+  echo "ERROR: API returned HTTP $HTTP_CODE"
+  cat /tmp/api-resp.json  # may be HTML or error JSON
+fi
+```
+
+Use unique temp file names (e.g., `/tmp/api-resp-$REPO.json`) when calling APIs inside loops to avoid file collisions.
+
+### Avoid these broken patterns
+
+| Pattern | Problem | Fix |
+|---------|---------|-----|
+| `curl ... \| jq '.x'` | Non-JSON response (403 HTML) crashes jq | Capture to file, check status first |
+| `curl -s -w "\n%{http_code}" ...` then `head -n -1` | macOS BSD `head` does not support negative line counts | Use `-o file -w "%{http_code}"` instead |
+| `curl ... \| jq -r '.rclass'` on repo details | Large responses may contain control characters (`U+0000-U+001F`) | Write to file first; if control chars persist, pipe through `tr -d '\000-\037'` before jq |
+| `GET /artifactory/api/repositories` then `jq '.[] \| select(.projectKey == ...)'` | List API does **not** include `projectKey` in response objects; filter always returns zero results | Use `?project={key}` query parameter to filter server-side ([docs](https://jfrog.com/help/r/jfrog-rest-apis/get-repositories-by-type-and-project)) |
+
+### Rate-limit protection
+
+Rapid sequential API calls can trigger nginx-level 403 blocking on JFrog cloud instances. Once blocked, **all** API calls fail (including auth checks), and the block can last several minutes.
+
+- **In loops**: add `sleep 1` between iterations when making API calls
+- **Batch where possible**: prefer single API calls over per-item loops (e.g., one `PUT` with a full list vs. N individual calls)
+- **Build payloads from known values**: when repo type and package type are known (e.g., from the ecosystem), hardcode them in JSON payloads instead of making extra API calls to look them up
+
+### macOS compatibility
+
+Avoid GNU-only shell commands. Common traps:
+
+| GNU (Linux) | macOS equivalent |
+|-------------|------------------|
+| `head -n -1` | `sed '$d'` |
+| `date -d "..."` | `date -j -f "..." ` |
+| `readarray` / `mapfile` | `while IFS= read -r` loop |
+
+## Error Handling
+
+- Always check HTTP status codes: 200/201 = success, 400 = bad request, 409 = already exists
+- On 409 (conflict), the resource already exists -- treat as success for idempotent operations
+- Log the full response body on errors for debugging
+
+## Destructive Operation Approval Gate
+
+Any JFrog operation that deletes objects requires explicit user approval before execution.
+
+- Treat all `DELETE` API calls as destructive (projects, repositories, users, groups, memberships, OIDC mappings, policies, or any other JFrog object).
+- Before running a delete call, present exactly what will be deleted and ask for approval in a single clear question.
+- Do not execute any delete call unless the user explicitly confirms approval in the current session.
+- If the user declines, is ambiguous, or does not respond, skip deletion and continue with non-destructive actions only.
+- For batch deletions, approval can be collected once per batch only if the full object list is shown first; otherwise ask per object.

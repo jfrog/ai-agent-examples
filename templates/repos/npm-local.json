@@ -1,0 +1,8 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "local",
+  "packageType": "npm",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Local npm repository for {{PROJECT_KEY}}",
+  "xrayIndex": {{XRAY_INDEX}}
+}
