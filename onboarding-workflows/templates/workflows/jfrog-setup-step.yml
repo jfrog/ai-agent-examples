@@ -1,0 +1,20 @@
+# JFrog CLI Setup Step -- insert this into existing workflow jobs
+# before any build or dependency resolution steps.
+#
+# Option A: Token-based authentication
+- name: Setup JFrog CLI
+  uses: jfrog/setup-jfrog-cli@v4
+  env:
+    JF_URL: ${{ vars.JF_URL }}
+    JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
+
+# Option B: OIDC authentication (recommended for production)
+# Requires `permissions: id-token: write` at the job level
+# and an OIDC integration configured in JFrog Platform.
+#
+# - name: Setup JFrog CLI
+#   uses: jfrog/setup-jfrog-cli@v4
+#   env:
+#     JF_URL: ${{ vars.JF_URL }}
+#   with:
+#     oidc-provider-name: setup-jfrog-cli

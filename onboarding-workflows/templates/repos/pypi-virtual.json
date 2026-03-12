@@ -1,0 +1,12 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "virtual",
+  "packageType": "pypi",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Virtual PyPI repository aggregating local and remote for {{PROJECT_KEY}}",
+  "repositories": [
+    "{{PROJECT_KEY}}-pypi-local",
+    "{{PROJECT_KEY}}-pypi-remote"
+  ],
+  "defaultDeploymentRepo": "{{PROJECT_KEY}}-pypi-local"
+}

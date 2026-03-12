@@ -1,0 +1,12 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "virtual",
+  "packageType": "maven",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Virtual Maven repository aggregating local and remote for {{PROJECT_KEY}}",
+  "repositories": [
+    "{{PROJECT_KEY}}-maven-local",
+    "{{PROJECT_KEY}}-maven-remote"
+  ],
+  "defaultDeploymentRepo": "{{PROJECT_KEY}}-maven-local"
+}

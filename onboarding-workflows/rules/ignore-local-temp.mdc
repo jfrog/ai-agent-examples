@@ -1,0 +1,12 @@
+---
+description: Ignore local/ and temp/ directories unless explicitly asked
+alwaysApply: true
+---
+
+# Ignored Directories
+
+Do **not** read, search, or reference files in the `local/` or `temp/` directories unless the user explicitly asks you to look there.
+
+- Treat these directories as private/scratch space
+- Do not include their contents in search results, context gathering, or file exploration
+- If a task seems to require files from these directories, ask the user before accessing them

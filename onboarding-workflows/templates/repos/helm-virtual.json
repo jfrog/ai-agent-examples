@@ -1,0 +1,12 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "virtual",
+  "packageType": "helm",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Virtual Helm repository aggregating local and remote for {{PROJECT_KEY}}",
+  "repositories": [
+    "{{PROJECT_KEY}}-helm-local",
+    "{{PROJECT_KEY}}-helm-remote"
+  ],
+  "defaultDeploymentRepo": "{{PROJECT_KEY}}-helm-local"
+}

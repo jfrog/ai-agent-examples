@@ -1,0 +1,43 @@
+---
+description: Conventions for editing JFrog agent skills in this repo; enforces SKILL.md structure, placeholders, and CONTRIBUTING.md updates.
+alwaysApply: true
+---
+
+# Contributing to JFrog Skills Repo
+
+When creating or editing skill files in this repository, follow these conventions so skills stay consistent and maintainable.
+
+## SKILL.md requirements
+
+- **YAML frontmatter** at the top with:
+  - `name`: Human-readable skill name (e.g. "JFrog Artifactory").
+  - `description`: One or two sentences including **trigger keywords** (e.g. "Triggers on mentions of artifactory, repository, artifact, deploy, ...").
+- **Authentication section** near the top that shows the `Authorization: Bearer $JFROG_ACCESS_TOKEN` header. Auth per `skills/jfrog-cli/login-flow.md`: the `jf` CLI is required (auto-installed if missing). (1) Resolve the active environment from `jf config show`, asking the user which env to use if multiple are saved, (2) if no credentials exist, agent-driven web login — asks for JFrog URL, registers a session, shows a login link, polls for token, and saves credentials via `jf config add`.
+- **Official Documentation section** at the bottom with 2–5 links to JFrog Help / REST API / CLI docs.
+
+## API and URL placeholders
+
+- Use the env var `$JFROG_URL` in URL patterns (e.g. `https://$JFROG_URL/artifactory/api/...`) so examples work out of the box once the user sets `JFROG_URL`.
+- Do not hardcode specific JFrog hostnames in skill content.
+
+## Reference files
+
+- API and command catalogs live in `*-reference.md` files (e.g. `rest-api-reference.md`, `api-reference.md`, `aql-reference.md`, `events-reference.md`).
+- Keep long endpoint or command lists in reference files; keep SKILL.md focused on flow and when to use what.
+
+## Security
+
+All skill content must follow the security rules in [CONTRIBUTING.md § Security](CONTRIBUTING.md#security). Key requirements:
+
+- **Never print, echo, or log tokens.** Use `${JFROG_ACCESS_TOKEN:+is set}` to check presence — never reveal the value.
+- **Never surface tokens in chat.** Say "authenticated successfully" or "token is set", never the token itself.
+- **Avoid shell interpolation for secrets.** Pass tokens to embedded scripts via `os.environ` or stdin, not `${VAR}` inside heredocs. Use quoted heredocs (`<< 'EOF'`).
+- **`jf config` is the sole credential store.** Never store tokens in plaintext files, env var profiles, or project directories.
+- **Validate URLs** with the ping endpoint before using them in authenticated API calls.
+- **Never store credentials in project files** or commit them to version control.
+
+## When adding or changing content
+
+- If you add or rely on a new documentation URL, **update CONTRIBUTING.md**: add the URL and target file(s) to the appropriate skill table in the [Data source catalog](CONTRIBUTING.md#data-source-catalog).
+
+For full conventions and the data-source catalog, see [CONTRIBUTING.md](CONTRIBUTING.md).

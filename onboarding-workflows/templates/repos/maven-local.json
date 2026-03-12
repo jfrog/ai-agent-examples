@@ -1,0 +1,10 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "local",
+  "packageType": "maven",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Local Maven repository for {{PROJECT_KEY}}",
+  "handleReleases": true,
+  "handleSnapshots": true,
+  "xrayIndex": {{XRAY_INDEX}}
+}

@@ -1,0 +1,10 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "remote",
+  "packageType": "pypi",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Remote PyPI repository proxying PyPI for {{PROJECT_KEY}}",
+  "url": "https://files.pythonhosted.org",
+  "pyPIRegistryUrl": "https://pypi.org",
+  "xrayIndex": {{XRAY_INDEX}}
+}

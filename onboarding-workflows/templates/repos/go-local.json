@@ -1,0 +1,8 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "local",
+  "packageType": "go",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Local Go repository for {{PROJECT_KEY}}",
+  "xrayIndex": {{XRAY_INDEX}}
+}

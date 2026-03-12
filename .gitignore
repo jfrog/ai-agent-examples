@@ -1,1 +1,26 @@
+# Credentials and local config
 .env
+.jfrog/
+config.txt
+jf-config.export
+*.jfrog-config
+
+# User-specific manifests (onboarding-workflows)
+jfrog-manifest*.yaml
+manifest.yaml
+!onboarding-workflows/templates/manifest-template.yaml
+!**/templates/manifest-template.yaml
+
+# Scratch / temp (onboarding-workflows)
+tmp/
+local/
+temp/
+
+# OS and editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+.cursor/plans/

@@ -1,0 +1,9 @@
+---
+description: Do not use MCP servers -- REST API only
+alwaysApply: true
+---
+# MCP Server Usage
+
+Do **not** use MCP server tools for JFrog operations, even if an MCP server is available.
+Always use the REST API approach defined in the skills and rules.
+MCP support will be added later.

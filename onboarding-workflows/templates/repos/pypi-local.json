@@ -1,0 +1,8 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "local",
+  "packageType": "pypi",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Local PyPI repository for {{PROJECT_KEY}}",
+  "xrayIndex": {{XRAY_INDEX}}
+}

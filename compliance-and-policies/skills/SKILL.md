@@ -1,6 +1,6 @@
 ---
-name: evidence-compliance-policies
-description: Create JFrog project lifecycle policies that check for evidence existence on promotion or release events for applications with specific labels. Use when the user asks to create a policy, evidence policy, promotion policy, lifecycle policy, compliance check, or evidence validation for application promotions.
+name: Compliance and Policies
+description: Create JFrog project lifecycle policies that check for evidence existence on promotion or release events for applications with specific labels. Use when the user asks to create a policy, evidence policy, promotion policy, lifecycle policy, compliance check, or evidence validation for application promotions. Triggers on mentions of policy, evidence policy, promotion policy, lifecycle policy, compliance check, evidence validation, AppTrust promotion.
 ---
 
 # Evidence Promotion Policy Creator
@@ -10,6 +10,16 @@ Create a JFrog lifecycle policy that validates evidence exists before allowing a
 ## Prerequisites
 
 Follow [jfrog-apptrust-auth.md](jfrog-apptrust-auth.md) to authenticate with the JFrog Platform before proceeding.
+
+## Desired State
+
+After the workflow completes, the following must be true:
+
+- A **template** exists (Rego policy) that evaluates evidence for the requested predicate type.
+- A **rule** exists that binds the template to the predicate type (and any extra parameters).
+- A **policy** exists, scoped to the chosen project or application, that blocks or warns on promotion when the evidence check fails.
+
+Validate by fetching the created policy (and its rule/template) via the Unified Policy API and confirming scope, predicate type, and enforcement action match what the user requested.
 
 ## Workflow
 
@@ -208,9 +218,7 @@ curl -s -X POST \
   }'
 ```
 
-Confirm successful creation to the user and summarize what was created.
-
----
+**Validate:** GET the created policy (and its rule/template) from the API and confirm scope, predicate type, and enforcement action match the user's request. Then confirm successful creation to the user and summarize what was created.
 
 ## Naming Conventions
 
@@ -219,15 +227,14 @@ Confirm successful creation to the user and summarize what was created.
 | Name | 1-255 characters, must start with a letter |
 | Description | 2048 characters characters, must start with a letter |
 
-## API Endpoints
+## Official Documentation
 
-| Resource | Endpoint |
-|----------|----------|
-| Templates | `${JFROG_URL}/unifiedpolicy/api/v1/templates` |
-| Rules | `${JFROG_URL}/unifiedpolicy/api/v1/rules` |
-| Policies | `${JFROG_URL}/unifiedpolicy/api/v1/policies` |
-
-For detailed API documentation:
 - [Templates API](https://jfrog.com/help/r/jfrog-rest-apis/templates)
 - [Rules API](https://jfrog.com/help/r/jfrog-rest-apis/rules)
-- [Policies API](https://jfrog.com/help/r/jfrog-rest-apis/lifecycle-policies)
+- [Lifecycle Policies API](https://jfrog.com/help/r/jfrog-rest-apis/lifecycle-policies)
+- [JFrog AppTrust](https://jfrog.com/help/r/jfrog-security-documentation/jfrog-apptrust)
+- [Evidence Management](https://jfrog.com/help/r/jfrog-artifactory-documentation/evidence-management)
+
+## Related skills
+
+For AppTrust entities (applications, versions, promotion) and Distribution release lifecycle, see **platform-features** (`jfrog-apptrust`, `jfrog-distribution`). For manifest-driven project onboarding, see **onboarding-workflows**.
