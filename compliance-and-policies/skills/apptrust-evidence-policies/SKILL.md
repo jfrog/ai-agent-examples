@@ -1,5 +1,5 @@
 ---
-name: Compliance and Policies
+name: Apptrust Evidence Policies
 description: Create JFrog project lifecycle policies that check for evidence existence on promotion or release events for applications with specific labels. Use when the user asks to create a policy, evidence policy, promotion policy, lifecycle policy, compliance check, or evidence validation for application promotions. Triggers on mentions of policy, evidence policy, promotion policy, lifecycle policy, compliance check, evidence validation, AppTrust promotion.
 ---
 
