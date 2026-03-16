@@ -1,0 +1,9 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "local",
+  "packageType": "docker",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Local Docker repository for {{PROJECT_KEY}}",
+  "dockerApiVersion": "V2",
+  "xrayIndex": {{XRAY_INDEX}}
+}

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0
+            https://maven.apache.org/xsd/settings-1.2.0.xsd">
+
+  <servers>
+    <server>
+      <id>artifactory</id>
+      <!-- Developers: set JFROG_USER and JFROG_PASSWORD environment variables -->
+      <username>${env.JFROG_USER}</username>
+      <password>${env.JFROG_PASSWORD}</password>
+    </server>
+  </servers>
+
+  <mirrors>
+    <mirror>
+      <id>artifactory</id>
+      <name>JFrog Artifactory - {{PROJECT_KEY}}</name>
+      <url>https://{{JFROG_HOSTNAME}}/artifactory/{{PROJECT_KEY}}-maven</url>
+      <mirrorOf>*</mirrorOf>
+    </mirror>
+  </mirrors>
+
+  <profiles>
+    <profile>
+      <id>artifactory</id>
+      <repositories>
+        <repository>
+          <id>central</id>
+          <url>https://{{JFROG_HOSTNAME}}/artifactory/{{PROJECT_KEY}}-maven</url>
+          <snapshots>
+            <enabled>true</enabled>
+          </snapshots>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <pluginRepository>
+          <id>central</id>
+          <url>https://{{JFROG_HOSTNAME}}/artifactory/{{PROJECT_KEY}}-maven</url>
+          <snapshots>
+            <enabled>true</enabled>
+          </snapshots>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+  </profiles>
+
+  <activeProfiles>
+    <activeProfile>artifactory</activeProfile>
+  </activeProfiles>
+</settings>

@@ -1,0 +1,12 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "virtual",
+  "packageType": "docker",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Virtual Docker repository aggregating local and remote for {{PROJECT_KEY}}",
+  "repositories": [
+    "{{PROJECT_KEY}}-docker-local",
+    "{{PROJECT_KEY}}-docker-remote"
+  ],
+  "defaultDeploymentRepo": "{{PROJECT_KEY}}-docker-local"
+}

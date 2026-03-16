@@ -1,0 +1,11 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "remote",
+  "packageType": "maven",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Remote Maven repository proxying Maven Central for {{PROJECT_KEY}}",
+  "url": "https://repo1.maven.org/maven2",
+  "handleReleases": true,
+  "handleSnapshots": true,
+  "xrayIndex": {{XRAY_INDEX}}
+}

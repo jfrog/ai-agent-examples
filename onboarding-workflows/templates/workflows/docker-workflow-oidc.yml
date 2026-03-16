@@ -1,0 +1,81 @@
+# GitHub Actions workflow for Docker projects using JFrog Artifactory with OIDC
+#
+# This workflow uses vanilla docker commands (no JFrog CLI required).
+# Authentication is handled via manual OIDC token exchange with JFrog.
+#
+# Supports both Public GitHub (github.com) and GitHub Enterprise.
+#
+# Prerequisites:
+#   1. Configure OIDC provider in JFrog Platform (see oidc-setup.md)
+#      - Public GitHub: Identity URL = https://token.actions.githubusercontent.com
+#      - GitHub Enterprise: Identity URL = https://<GHE_HOST>/_services/token
+#   2. Create identity mapping for your GitHub repository
+#
+# No secrets required! Authentication uses GitHub OIDC tokens.
+#
+# Usage:
+#   1. Copy this file to .github/workflows/jfrog-docker.yml
+#   2. Replace {JFROG_HOST} with your JFrog hostname (e.g., mycompany.jfrog.io)
+#   3. Replace {PROJECT_KEY} with your JFrog project key
+#   4. Replace {IMAGE_NAME} with your image name
+#   5. Replace {OIDC_PROVIDER_NAME} with the OIDC provider name configured in JFrog
+#      - Use "github-oidc" for public GitHub
+#      - Use "github-enterprise-oidc" (or your custom name) for GitHub Enterprise
+
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+# Required permissions for OIDC authentication
+permissions:
+  id-token: write   # Required for requesting OIDC token
+  contents: read    # Required for actions/checkout
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      JFROG_HOST: "{JFROG_HOST}"
+      JF_URL: "https://{JFROG_HOST}"
+      PROJECT_KEY: "{PROJECT_KEY}"
+      IMAGE_NAME: "{IMAGE_NAME}"
+      OIDC_PROVIDER: "{OIDC_PROVIDER_NAME}"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get OIDC access token
+        run: |
+          # Request OIDC token from GitHub
+          OIDC_TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=jfrog" | jq -r '.value')
+          # Exchange OIDC token for JFrog access token
+          ACCESS_TOKEN=$(curl -s -X POST "${{ env.JF_URL }}/access/api/v1/oidc/token" \
+            -H "Content-Type: application/json" \
+            -d "{\"grant_type\": \"urn:ietf:params:oauth:grant-type:token-exchange\", \"subject_token\": \"${OIDC_TOKEN}\", \"subject_token_type\": \"urn:ietf:params:oauth:token-type:id_token\", \"provider_name\": \"${{ env.OIDC_PROVIDER }}\"}" | jq -r '.access_token')
+          # Extract username from token sub claim
+          PAYLOAD=$(echo "${ACCESS_TOKEN}" | cut -d'.' -f2 | tr '_-' '/+')
+          PADLEN=$((4 - ${#PAYLOAD} % 4)); [ "$PADLEN" -lt 4 ] && PAYLOAD="${PAYLOAD}$(printf '=%.0s' $(seq 1 $PADLEN))"
+          TOKEN_USER=$(echo "${PAYLOAD}" | base64 -d 2>/dev/null | jq -r '.sub')
+          echo "ACCESS_TOKEN=${ACCESS_TOKEN}" >> $GITHUB_ENV
+          echo "TOKEN_USER=${TOKEN_USER}" >> $GITHUB_ENV
+
+      - name: Authenticate Docker with JFrog
+        run: |
+          echo "${ACCESS_TOKEN}" | docker login ${{ env.JFROG_HOST }} --username "${TOKEN_USER}" --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.JFROG_HOST }}/${{ env.PROJECT_KEY }}-docker/${{ env.IMAGE_NAME }}:0.${{ github.run_number }} .
+
+      - name: Push Docker image
+        if: github.event_name != 'pull_request'
+        run: |
+          docker push ${{ env.JFROG_HOST }}/${{ env.PROJECT_KEY }}-docker/${{ env.IMAGE_NAME }}:0.${{ github.run_number }}

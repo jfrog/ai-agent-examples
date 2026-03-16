@@ -1,6 +1,10 @@
-# Evidence Compliance Policies Skill
+# Compliance and Policies
 
 An Agent Skill that creates JFrog AppTrust lifecycle policies to validate evidence exists before allowing application version promotion through release stages. It leverages the JFrog Unified Policy API to build Rego-based compliance gates scoped to specific projects or applications.
+
+## Who is this for?
+
+**Suggested persona:** Platform and security admins, and release managers who need to enforce evidence-based promotion gates (e.g. SLSA provenance, security scans, quality gates) before applications can be promoted.
 
 ## What It Does
 

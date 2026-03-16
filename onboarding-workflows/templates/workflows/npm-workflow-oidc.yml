@@ -1,0 +1,126 @@
+# GitHub Actions workflow for npm projects using JFrog Artifactory with OIDC
+#
+# Supports both Public GitHub (github.com) and GitHub Enterprise.
+#
+# Prerequisites:
+#   1. Configure OIDC provider in JFrog Platform (see oidc-setup.md)
+#      - Public GitHub: Identity URL = https://token.actions.githubusercontent.com
+#      - GitHub Enterprise: Identity URL = https://<GHE_HOST>/_services/token
+#   2. Create identity mapping for your GitHub repository
+#
+# No secrets required! Authentication uses GitHub OIDC tokens.
+#
+# Usage:
+#   1. Copy this file to .github/workflows/jfrog-npm.yml
+#   2. Replace {JFROG_HOST} with your JFrog hostname (e.g., mycompany.jfrog.io)
+#   3. Replace {PROJECT_KEY} with your JFrog project key
+#   4. Replace {OIDC_PROVIDER_NAME} with the OIDC provider name configured in JFrog
+#      - Use "github-oidc" for public GitHub
+#      - Use "github-enterprise-oidc" (or your custom name) for GitHub Enterprise
+
+name: Build and Publish npm Package
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  release:
+    types: [published]
+
+# Required permissions for OIDC authentication
+permissions:
+  id-token: write   # Required for requesting OIDC token
+  contents: read    # Required for actions/checkout
+
+env:
+  # Replace with your JFrog Platform URL (without https://)
+  JF_URL: https://{JFROG_HOST}
+  # Replace with your JFrog project key
+  JF_PROJECT: "{PROJECT_KEY}"
+  # OIDC provider name configured in JFrog Platform
+  OIDC_PROVIDER: "{OIDC_PROVIDER_NAME}"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v4
+        with:
+          oidc-provider-name: ${{ env.OIDC_PROVIDER }}
+
+      - name: Configure npm client
+        run: |
+          # Configure npm to use JFrog for dependency resolution and publishing
+          jf npmc --repo-resolve ${{ env.JF_PROJECT }}-npm --repo-deploy ${{ env.JF_PROJECT }}-npm
+
+      - name: Install dependencies
+        run: jf npm ci
+
+      - name: Run linting
+        run: npm run lint --if-present
+
+      - name: Run tests
+        run: npm test --if-present
+
+      - name: Build
+        run: npm run build --if-present
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    # Only publish on release
+    if: github.event_name == 'release'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v4
+        with:
+          oidc-provider-name: ${{ env.OIDC_PROVIDER }}
+
+      - name: Configure npm client
+        run: |
+          jf npmc --repo-resolve ${{ env.JF_PROJECT }}-npm --repo-deploy ${{ env.JF_PROJECT }}-npm
+
+      - name: Install dependencies
+        run: jf npm ci
+
+      - name: Build
+        run: npm run build --if-present
+
+      - name: Publish to JFrog
+        run: |
+          # Get version from release tag (removes 'v' prefix if present)
+          VERSION=${GITHUB_REF_NAME#v}
+
+          # Update package.json version
+          npm version $VERSION --no-git-tag-version --allow-same-version
+
+          # Publish to JFrog using JFrog CLI
+          jf npm publish
+
+      - name: Verify publication
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+
+          echo "Verifying ${PACKAGE_NAME}@${VERSION} is available..."
+          jf npm show "${PACKAGE_NAME}@${VERSION}" version

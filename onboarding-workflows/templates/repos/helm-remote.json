@@ -1,0 +1,9 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "remote",
+  "packageType": "helm",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Remote Helm repository proxying public charts for {{PROJECT_KEY}}",
+  "url": "https://charts.helm.sh/stable",
+  "xrayIndex": {{XRAY_INDEX}}
+}

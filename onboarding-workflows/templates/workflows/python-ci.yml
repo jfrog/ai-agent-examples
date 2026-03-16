@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      JF_PROJECT: "{{PROJECT_KEY}}"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: ${{ vars.JF_URL }}
+          JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
+
+      - name: Configure pip client
+        run: jf pipc --repo-resolve {{PROJECT_KEY}}-pypi --repo-deploy {{PROJECT_KEY}}-pypi-local
+
+      - name: Install dependencies
+        run: jf pip install -r requirements.txt
+
+      - name: Run tests
+        run: python -m pytest
+
+      - name: Build and upload package
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: |
+          python -m pip install build
+          python -m build
+          jf rt upload "dist/*" "{{PROJECT_KEY}}-pypi-local/"

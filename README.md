@@ -1,68 +1,131 @@
 # JFrog AI Agent Examples
 
-A curated collection of AI agent skills examples for automating workflows on the JFrog Platform. Each skill is a self-contained module that an AI coding assistant (such as Cursor) can follow to accomplish domain-specific tasks through natural-language conversation.
+A curated collection of AI agent skills and rules for automating workflows on the JFrog Platform. Each example is a self-contained set of skills that an AI coding assistant can follow to accomplish domain-specific tasks through natural-language conversation.
 
-## Available Skills
+---
 
-| Skill | Description |
-|---|---|
-| [Evidence Compliance Policies](evidence-compliance-policies/) | Create lifecycle policies that validate evidence exists before allowing application promotion through release stages |
+**Disclaimer:** This repository is a collection of community examples and is **not** a formal JFrog product. These skills and rules are provided as-is for interacting with the JFrog Platform and its features. They are not officially supported, may not cover all edge cases, and should be reviewed before use in production environments.
 
-## Repository Structure
+---
+
+## Overview
+
+| Example | Suggested persona | Description |
+|---------|-------------------|-------------|
+| [**compliance-and-policies**](compliance-and-policies/) | Platform / security admins, release managers | Create lifecycle policies that validate evidence before promotion |
+| [**platform-features**](platform-features/) | Developers, DevOps, platform engineers | 11 skills covering JFrog Platform APIs, CLI, security, and architecture patterns |
+| [**onboarding-workflows**](onboarding-workflows/) | Platform admins, SRE, onboarding automation | Orchestrate multi-project onboarding with manifest-driven provisioning |
+
+**Choosing an example:** Use **compliance-and-policies** for evidence-based promotion gates; **platform-features** for API/CLI reference and patterns; **onboarding-workflows** for provisioning projects, repos, members, and CI from a manifest.
+
+## Repository structure
 
 ```
 ai-agent-examples/
-├── global/                          # Shared rules applied across all skills
+├── README.md                 # This file
+├── .env.example             # Template for JFROG_URL, JFROG_ACCESS_TOKEN
+├── global/                   # Shared rules applied across all examples
 │   └── rules/
-├── <skill-name>/                    # One directory per skill
-│   ├── README.md                    # Human-facing overview and usage guide
+│       ├── interaction-questions.mdc
+│       └── jfrog-platform.mdc
+├── compliance-and-policies/  # Evidence-based lifecycle policies
+│   ├── README.md
+│   ├── rules/
 │   └── skills/
-│       ├── SKILL.md                 # Agent-facing instructions (the skill definition)
-│       ├── rules/                   # Cursor rules scoped to this skill
-│       └── assets/                  # Reference files, schemas, examples
-├── .env.example                     # Template for required environment variables
-└── NOTICE                           # License information
+├── platform-features/       # JFrog APIs, CLI, patterns (11 skills)
+│   ├── README.md
+│   ├── CONTRIBUTING.md
+│   ├── rules/
+│   └── skills/
+└── onboarding-workflows/     # Manifest-driven project/repo onboarding
+    ├── README.md
+    ├── rules/
+    ├── skills/
+    ├── templates/
+    └── scripts/
 ```
 
-When adding a new skill, create a directory at the repo root following the layout above. Place the `SKILL.md` that the agent executes under `skills/`, and any supporting assets or rules alongside.
+- **global/rules/** — Copy these into your IDE’s rules directory so they apply whenever you use any example.
+- **&lt;example&gt;/skills/** and **&lt;example&gt;/rules/** — Copy the ones for the example(s) you use.
 
-## Getting Started
+## Installation
 
-### Prerequisites
+Copy the skills and rules for the example(s) you want into your AI environment. Run commands from the **repository root** (the directory containing `global/`, `compliance-and-policies/`, etc.).
 
-- A JFrog Platform instance (specific entitlements depend on the skill)
-- An access token with the privileges required by the skill you want to use
-- `curl` and `jq` installed locally
+### Cursor
 
-### Configuration
+1. Copy **global** rules (recommended for all examples):
+   ```bash
+   mkdir -p .cursor/rules
+   cp global/rules/*.mdc .cursor/rules/
+   ```
+2. Copy one or more examples:
+   ```bash
+   mkdir -p .cursor/skills
+   # Example: compliance-and-policies
+   cp -r compliance-and-policies/skills/* .cursor/skills/
+   cp compliance-and-policies/rules/*.mdc .cursor/rules/ 2>/dev/null || true
+   # Example: platform-features
+   cp -r platform-features/skills/* .cursor/skills/
+   cp platform-features/rules/*.mdc .cursor/rules/ 2>/dev/null || true
+   # Example: onboarding-workflows
+   cp -r onboarding-workflows/skills/* .cursor/skills/
+   cp onboarding-workflows/rules/*.mdc .cursor/rules/ 2>/dev/null || true
+   ```
 
-Copy the example environment file:
+### VS Code (GitHub Copilot)
+
+- Copy skill folders into `.github/copilot/skills/` (or your Copilot skills path). Add rule content to `.github/copilot-instructions.md` or your project’s Copilot instructions so the agent follows JFrog conventions.
+
+### Claude Code
+
+- Copy skill folders into `.claude/skills/`. Put global and example rule content into `CLAUDE.md` or a dedicated rules file your environment reads.
+
+### Windsurf
+
+- Copy skills into `.windsurf/skills/` and rules into `.windsurf/rules/` (or the paths your Windsurf setup uses for skills and rules).
+
+### JetBrains AI Assistant
+
+- Paste skill instructions into AI Assistant custom instructions or project guidelines (e.g. `.junie/guidelines.md`). Include the contents of the relevant rule files so the assistant follows JFrog API and safety conventions.
+
+### Other agents
+
+- Skills use the open `SKILL.md` format. Copy the `skills/` directories into your agent’s skills location. See [agentskills.io](https://agentskills.io) for the broader ecosystem and tool support.
+
+## Prerequisites
+
+- A JFrog Platform instance (entitlements depend on the example: e.g. AppTrust for compliance-and-policies, Platform Admin for onboarding-workflows).
+- Credentials: set `JFROG_URL` and `JFROG_ACCESS_TOKEN` (or use a `.env` file). Copy `.env.example` to `.env` and fill in your values. Keep `.env` out of version control.
 
 ```bash
 cp .env.example .env
+# Edit .env with your JFrog URL and access token
 ```
 
-Edit `.env` with your JFrog Platform URL and access token. The file should be git-ignored to prevent accidental credential exposure.
+- Tools used by the examples: `curl`, `jq`; for onboarding-workflows also `yq`, Git.
 
-### Using a Skill
+## Using a skill
 
-Depending on our AI tool, Cursor (or another AI-assisted IDE that supports agent skills) 
-1. Copy the skill conrtent into the appropreate location, for cursor for example, copy all the content under the skill folder under .cursor/skills and all global/rules under .cursor/rules.
-2. Ask the agent to perform the task in natural language. For example:
+1. Install as above for your IDE.
+2. Ask the agent in natural language, e.g.:
+   - *"Create a promotion policy that requires SLSA provenance evidence"* (compliance-and-policies)
+   - *"Set up a CI integration with security scans for my npm project"* (platform-features)
+   - *"Onboard all projects from my-manifest.yaml"* (onboarding-workflows)
 
-   > "Create a promotion policy that requires SLSA provenance evidence"
-
-The agent will follow the skill's workflow, authenticate with your JFrog Platform, and walk you through each step interactively.
+The agent will follow the skill’s workflow, use your credentials (from env or `.env`), and guide you step by step.
 
 ## Contributing
 
-We welcome contributions of new skills and improvements to existing ones. When contributing a new skill, please:
+We welcome new examples and improvements to existing ones.
 
-1. Follow the repository structure described above.
-2. Include a `README.md` with prerequisites, supported use cases, and example prompts.
-3. Include a `SKILL.md` with clear, step-by-step agent instructions.
-4. Add reference assets under `assets/` where applicable.
-5. Keep shared conventions in `global/rules/` and skill-specific ones in `<skill-name>/skills/rules/`.
+1. **New example:** Add a directory at the repo root with:
+   - `README.md` — overview, who it’s for, prerequisites, usage.
+   - `skills/` — at least one skill with `SKILL.md` (and optional `*-reference.md`, `assets/`).
+   - `rules/` (optional) — example-specific `.mdc` rules.
+2. **Existing example:** Follow the same layout; keep shared conventions in `global/rules/` and example-specific ones in that example’s `rules/`.
+3. **Skills:** Include a clear desired state / success criteria and validation steps; use the standardized section order (Authentication, Prerequisites, Desired State, Workflow, Official Documentation, etc.) described in the plan.
+4. **Overlapping domains:** If your skill touches Curation, AppTrust, Artifactory repos, or Access/projects, add a “Related skills” or “See also” reference to the other example(s) that cover the same end result.
 
 ## License
 

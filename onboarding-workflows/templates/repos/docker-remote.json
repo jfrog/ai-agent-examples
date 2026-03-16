@@ -1,0 +1,11 @@
+{
+  "key": "{{REPO_KEY}}",
+  "rclass": "remote",
+  "packageType": "docker",
+  "projectKey": "{{PROJECT_KEY}}",
+  "description": "Remote Docker repository proxying Docker Hub for {{PROJECT_KEY}}",
+  "url": "https://registry-1.docker.io",
+  "externalDependenciesEnabled": true,
+  "externalDependenciesPatterns": ["**"],
+  "xrayIndex": {{XRAY_INDEX}}
+}
