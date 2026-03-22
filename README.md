@@ -13,7 +13,7 @@ A curated collection of AI agent skills and rules for automating workflows on th
 | Example | Suggested persona | Description |
 |---------|-------------------|-------------|
 | [**compliance-and-policies**](compliance-and-policies/) | Platform / security admins, release managers | Create lifecycle policies that validate evidence before promotion |
-| [**platform-features**](platform-features/) | Developers, DevOps, platform engineers | 11 skills covering JFrog Platform APIs, CLI, security, and architecture patterns |
+| [**platform-features**](platform-features/) | Developers, DevOps, platform engineers | Multiple skills covering JFrog Platform APIs, CLI, security, and architecture patterns |
 | [**onboarding-workflows**](onboarding-workflows/) | Platform admins, SRE, onboarding automation | Orchestrate multi-project onboarding with manifest-driven provisioning |
 
 **Choosing an example:** Use **compliance-and-policies** for evidence-based promotion gates; **platform-features** for API/CLI reference and patterns; **onboarding-workflows** for provisioning projects, repos, members, and CI from a manifest.
@@ -32,7 +32,7 @@ ai-agent-examples/
 │   ├── README.md
 │   ├── rules/
 │   └── skills/
-├── platform-features/       # JFrog APIs, CLI, patterns (11 skills)
+├── platform-features/       # JFrog APIs, CLI, patterns
 │   ├── README.md
 │   ├── CONTRIBUTING.md
 │   ├── rules/
@@ -50,7 +50,17 @@ ai-agent-examples/
 
 ## Installation
 
-Copy the skills and rules for the example(s) you want into your AI environment. Run commands from the **repository root** (the directory containing `global/`, `compliance-and-policies/`, etc.).
+Install skills directly from this repository using the [`skills` CLI](https://www.npmjs.com/package/skills):
+
+```bash
+npx skills add git@github.com:jfrog/ai-agent-examples.git --skill <skill-name>
+```
+
+Replace `<skill-name>` with the skill folder name (e.g. `jfrog-onemodel`, `jfrog-cli`, etc.).
+
+> **Note:** Some skills depend on others (for example, **jfrog-onemodel** expects **jfrog-cli** for credentials) or on copied rules from `global/` or an example’s `rules/`. Install those dependencies or copy the rules as needed.
+
+**Or** copy the skills and rules for the example(s) you want into your AI environment. Run commands from the **repository root** (the directory containing `global/`, `compliance-and-policies/`, etc.).
 
 ### Cursor
 
