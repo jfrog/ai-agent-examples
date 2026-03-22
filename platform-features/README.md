@@ -1,6 +1,6 @@
 # Platform Features
 
-Agent skills that give your AI assistant deep knowledge of the JFrog Platform — REST APIs, CLI, and architectural patterns. Use these when you need to work with Artifactory, Xray, Access, Distribution, Curation, AppTrust, and related products from natural language.
+Agent skills that give your AI assistant deep knowledge of the JFrog Platform — REST APIs, OneModel GraphQL, CLI, and architectural patterns. Use these when you need to work with Artifactory, Xray, Access, Distribution, Curation, AppTrust, and related products from natural language.
 
 ## Who is this for?
 
@@ -17,6 +17,7 @@ Skills are in the open `SKILL.md` format. Each skill folder under `skills/` cont
 - "Check if the npm package lodash@4.17.20 has any critical vulnerabilities"
 - "Promote my release bundle to production with security gates"
 - "Help me pick the right JFrog architecture pattern for my team"
+- "Run a GraphQL query against OneModel to list my applications"
 
 ## Available skills
 
@@ -32,6 +33,7 @@ Skills are in the open `SKILL.md` format. Each skill folder under `skills/` cont
 | **jfrog-mission-control** | mission control, JPD, platform deployment, license, proxy, deployment health |
 | **jfrog-workers** | worker, serverless, event hook, TypeScript worker, BEFORE_DOWNLOAD, custom logic |
 | **jfrog-cli** | jf command, jfrog cli, jf rt, jf audit, jf scan, jf docker, file spec |
+| **jfrog-onemodel** | onemodel, graphql, unified API, applications, evidence, packages, catalog, and more |
 | **jfrog-patterns** | pattern, best practice, architecture, get started, CI integration, multi-site, AppTrust |
 
 ## Prerequisites
@@ -65,6 +67,7 @@ platform-features/
     ├── jfrog-mission-control/
     ├── jfrog-workers/
     ├── jfrog-cli/
+    ├── jfrog-onemodel/
     └── jfrog-patterns/
 ```
 
