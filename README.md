@@ -3,6 +3,7 @@
 A curated collection of AI agent skills and rules for automating workflows on the JFrog Platform. Each example is a self-contained set of skills that an AI coding assistant can follow to accomplish domain-specific tasks through natural-language conversation.
 
 ---
+**Important:** For the official JFrog skills offering, please visit https://github.com/jfrog/jfrog-skills
 
 **Disclaimer:** This repository is a collection of community examples and is **not** a formal JFrog product. These skills and rules are provided as-is for interacting with the JFrog Platform and its features. They are not officially supported, may not cover all edge cases, and should be reviewed before use in production environments.
 
