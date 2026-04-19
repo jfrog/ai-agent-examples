@@ -5,6 +5,8 @@ description: Create users and groups on the JFrog Platform via REST API. Use whe
 
 # JFrog Create Users & Groups
 
+Prefer **`jf api`** ([../../../platform-features/skills/jfrog-cli/jf-api-patterns.md](../../../platform-features/skills/jfrog-cli/jf-api-patterns.md)); **`curl`** in checks below is **fallback**.
+
 Creates users and groups on the JFrog Platform. Typically invoked during onboarding when the manifest references users or groups that do not yet exist, but can also be used standalone.
 
 ## Inputs
@@ -52,9 +54,8 @@ Groups must be created **before** users so that users can be assigned to groups 
 #### Check if group exists
 
 ```bash
-HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v2/groups/$GROUP_NAME")
+jf api "/access/api/v2/groups/$GROUP_NAME" >/tmp/jf-cug-group.json 2>/tmp/jf-cug-group.code
+HTTP_CODE=$(tr -d '\r\n' < /tmp/jf-cug-group.code)
 ```
 
 - `200` = already exists, skip creation
@@ -63,8 +64,7 @@ HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' \
 #### Create a group (run with `required_permissions: ["full_network"]`)
 
 ```bash
-curl -sf -X POST "$JFROG_URL/access/api/v2/groups" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api /access/api/v2/groups -X POST \
   -H "Content-Type: application/json" \
   -d '{
     "name": "'"$GROUP_NAME"'",
@@ -82,9 +82,8 @@ After all groups are created, create users. Users can optionally be assigned to 
 #### Check if user exists
 
 ```bash
-HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v2/users/$JFROG_USER_NAME")
+jf api "/access/api/v2/users/$JFROG_USER_NAME" >/tmp/jf-cug-user.json 2>/tmp/jf-cug-user.code
+HTTP_CODE=$(tr -d '\r\n' < /tmp/jf-cug-user.code)
 ```
 
 - `200` = already exists, skip creation
@@ -93,8 +92,7 @@ HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' \
 #### Create a user (run with `required_permissions: ["full_network"]`)
 
 ```bash
-curl -sf -X POST "$JFROG_URL/access/api/v2/users" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api /access/api/v2/users -X POST \
   -H "Content-Type: application/json" \
   -d '{
     "username": "'"$JFROG_USER_NAME"'",
@@ -115,8 +113,7 @@ Expected response: HTTP 201 with the created user JSON.
 Immediately after successfully creating a user, expire their password so they are forced to set a new one on first login to Artifactory. Run with `required_permissions: ["full_network"]`:
 
 ```bash
-curl -sf -X POST "$JFROG_URL/access/api/v2/users/$JFROG_USER_NAME/password/expire" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api /access/api/v2/users/$JFROG_USER_NAME/password/expire -X POST \
   -H "Content-Type: application/json"
 ```
 
@@ -141,12 +138,10 @@ After creating all users and groups, verify they exist:
 
 ```bash
 # Verify user
-curl -sf -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v2/users/$JFROG_USER_NAME" | jq '{username, email, status}'
+jf api "/access/api/v2/users/$JFROG_USER_NAME" | jq '{username, email, status}'
 
 # Verify group
-curl -sf -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v2/groups/$GROUP_NAME" | jq '{name, description}'
+jf api "/access/api/v2/groups/$GROUP_NAME" | jq '{name, description}'
 ```
 
 ## Integration with Onboarding Workflow

@@ -3,6 +3,9 @@ name: JFrog Distribution
 description: Use when working with JFrog Distribution and Release Lifecycle Management -- creating release bundles, promoting through environments, distributing to edge nodes, or managing evidence. Triggers on mentions of distribution, release bundle, promote, environment, edge node, release lifecycle, or evidence.
 ---
 
+
+> **API transport:** Prefer **`jf api`** (JFrog CLI 2.100.0+). See [jf-api-patterns.md](../jfrog-cli/jf-api-patterns.md) (path-only URLs; auth from `jf config`). Examples using **`curl`** with `$JFROG_URL` + bearer token are **fallback** when the CLI is missing or below 2.100.0.
+
 # JFrog Distribution Skill
 
 ## Authentication

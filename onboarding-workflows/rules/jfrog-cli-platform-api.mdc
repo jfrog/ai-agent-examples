@@ -1,0 +1,38 @@
+---
+description: Prefer JFrog CLI 2.100.0+ and jf api for platform REST calls; require config and platform confirmation before operations
+alwaysApply: true
+---
+
+# JFrog CLI and `jf api` (preferred)
+
+## Minimum version
+
+- Use **JFrog CLI 2.100.0 or newer** (`jf --version`). The **`jf api`** command requires this version.
+- Install or upgrade from [Install JFrog CLI](https://docs.jfrog.com/integrations/docs/download-and-install-the-jfrog-cli).
+
+## Before any JFrog Platform API work
+
+1. Ensure **`jf` is installed** and meets the version requirement.
+2. Ensure a server is configured using the **login-flow** in [platform-features/skills/jfrog-cli/login-flow.md](../../platform-features/skills/jfrog-cli/login-flow.md): `jf config show`, `jf config add`, or web login.
+3. **Platform confirmation (wrong-instance guard):** After the active server is known (or chosen when several exist), **show the platform URL(s) from `jf config show`** (server id and URL for each). **Ask the user to confirm** this is the correct JFrog instance, or to switch (`jf config use`, add another server, etc.). When only one server exists, still show its URL once for confirmation (compare to manifest `jfrog.url` when applicable). Ask **one question at a time** (see [global/rules/interaction-questions.mdc](../../global/rules/interaction-questions.mdc)).
+4. **Post-confirmation readiness:** Only after the user confirms, run **`jf api /artifactory/api/v1/system/readiness`** with the same **`--server-id`** as the confirmed config (or the default server if none specified). On failure, stop and troubleshoot URL/credentials before other API work.
+
+## Preferred invocation
+
+- Use **`jf api <path>`** for JFrog REST paths (path only, e.g. `/access/api/v2/users`, `/artifactory/api/repositories`). Base URL and credentials come from **`jf config`**.
+- Use **`--server-id=<id>`** when multiple configurations exist or after the user picks a server.
+
+## Fallback to `curl`
+
+Use **`curl`** with `$JFROG_URL` and `Authorization: Bearer $JFROG_ACCESS_TOKEN` only when:
+
+- The CLI is missing or below 2.100.0, or
+- The user explicitly operates without `jf config`, or
+- A documented bootstrap step requires `curl` (e.g. web-login session registration before config exists).
+
+Follow safe patterns in [global/rules/jfrog-platform.mdc](../../global/rules/jfrog-platform.mdc) and [platform-features/skills/jfrog-cli/jf-api-patterns.md](../../platform-features/skills/jfrog-cli/jf-api-patterns.md).
+
+## Reference
+
+- Canonical patterns: [platform-features/skills/jfrog-cli/jf-api-patterns.md](../../platform-features/skills/jfrog-cli/jf-api-patterns.md)
+- Login and config: [platform-features/skills/jfrog-cli/login-flow.md](../../platform-features/skills/jfrog-cli/login-flow.md)

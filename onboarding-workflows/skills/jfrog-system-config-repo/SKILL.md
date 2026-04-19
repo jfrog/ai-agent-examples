@@ -5,6 +5,8 @@ description: Persist and retrieve onboarding manifests via Artifactory or Git. S
 
 # JFrog State Persistence
 
+Prefer **`jf api`** per [../../../platform-features/skills/jfrog-cli/jf-api-patterns.md](../../../platform-features/skills/jfrog-cli/jf-api-patterns.md) after `jf config`; **`curl`** remains valid **fallback**.
+
 Manages manifest persistence for onboarding audit trails. Supports two backends:
 
 - **Artifactory** (default) -- stores manifests in a dedicated JFrog generic repository
@@ -91,16 +93,16 @@ Run with `required_permissions: ["full_network"]`.
 #### A1. Check/create the project
 
 ```bash
-STATUS=$(curl -s -o /dev/null -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v1/projects/${STATE_PROJECT}")
+SC=/tmp/jf-state-proj.code
+SB=/tmp/jf-state-proj.json
+jf api "/access/api/v1/projects/${STATE_PROJECT}" >"$SB" 2>"$SC"
+STATUS=$(tr -d '\r\n' < "$SC")
 
 if [ "$STATUS" = "200" ]; then
   echo "OK: State project '${STATE_PROJECT}' already exists"
 elif [ "$STATUS" = "404" ]; then
   echo "Creating state project '${STATE_PROJECT}'..."
-  curl -sf -X POST "$JFROG_URL/access/api/v1/projects" \
-    -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+  jf api /access/api/v1/projects -X POST \
     -H "Content-Type: application/json" \
     -d '{
       "project_key": "'"${STATE_PROJECT}"'",
@@ -125,10 +127,10 @@ fi
 If the project already exists, check that no non-admin members have been added:
 
 ```bash
-USERS=$(curl -s -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v1/projects/${STATE_PROJECT}/users" | jq 'length')
-GROUPS=$(curl -s -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v1/projects/${STATE_PROJECT}/groups" | jq 'length')
+jf api "/access/api/v1/projects/${STATE_PROJECT}/users" >/tmp/state-users.json 2>/tmp/state-users.code
+USERS=$(jq 'length' /tmp/state-users.json)
+jf api "/access/api/v1/projects/${STATE_PROJECT}/groups" >/tmp/state-groups.json 2>/tmp/state-groups.code
+GROUPS=$(jq 'length' /tmp/state-groups.json)
 
 if [ "$USERS" -gt 0 ] || [ "$GROUPS" -gt 0 ]; then
   echo "WARNING: The state project '${STATE_PROJECT}' has $USERS user(s) and $GROUPS group(s) assigned."
@@ -140,16 +142,16 @@ fi
 #### A3. Check/create the repository
 
 ```bash
-STATUS=$(curl -s -o /dev/null -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/artifactory/api/repositories/${STATE_REPO}")
+SRC=/tmp/jf-state-repo.code
+SRB=/tmp/jf-state-repo.json
+jf api "/artifactory/api/repositories/${STATE_REPO}" >"$SRB" 2>"$SRC"
+STATUS=$(tr -d '\r\n' < "$SRC")
 
 if [ "$STATUS" = "200" ]; then
   echo "OK: State repository '${STATE_REPO}' already exists"
 elif [ "$STATUS" = "404" ]; then
   echo "Creating state repository '${STATE_REPO}'..."
-  curl -sf -X PUT "$JFROG_URL/artifactory/api/repositories/${STATE_REPO}" \
-    -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+  jf api "/artifactory/api/repositories/${STATE_REPO}" -X PUT \
     -H "Content-Type: application/json" \
     -d '{
       "key": "'"${STATE_REPO}"'",
@@ -173,9 +175,8 @@ Run with `required_permissions: ["full_network"]`.
 #### B1. List manifest snapshots
 
 ```bash
-CHILDREN=$(curl -s -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/artifactory/api/storage/${STATE_REPO}/" \
-  | jq -r '[.children[]? | select(.folder==true) | .uri] | sort')
+jf api "/artifactory/api/storage/${STATE_REPO}/" >/tmp/state-storage.json 2>/tmp/state-storage.code
+CHILDREN=$(jq -r '[.children[]? | select(.folder==true) | .uri] | sort' /tmp/state-storage.json)
 
 MANIFEST_COUNT=$(echo "$CHILDREN" | jq 'length')
 echo "Found $MANIFEST_COUNT manifest snapshot(s)"
@@ -186,15 +187,12 @@ echo "Found $MANIFEST_COUNT manifest snapshot(s)"
 Sort timestamp folders lexicographically (ISO-8601 sorts naturally) and download the most recent:
 
 ```bash
-LATEST_FOLDER=$(curl -s -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/artifactory/api/storage/${STATE_REPO}/" \
-  | jq -r '[.children[]? | select(.folder==true) | .uri] | sort | last')
+jf api "/artifactory/api/storage/${STATE_REPO}/" >/tmp/state-storage2.json 2>/dev/null
+LATEST_FOLDER=$(jq -r '[.children[]? | select(.folder==true) | .uri] | sort | last' /tmp/state-storage2.json)
 
 if [ "$LATEST_FOLDER" != "null" ] && [ -n "$LATEST_FOLDER" ]; then
   echo "Latest manifest folder: $LATEST_FOLDER"
-  curl -s -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-    "$JFROG_URL/artifactory/${STATE_REPO}${LATEST_FOLDER}/jfrog-configuration-manifest.yaml" \
-    -o /tmp/latest-manifest.yaml
+  jf api "/artifactory/${STATE_REPO}${LATEST_FOLDER}/jfrog-configuration-manifest.yaml" >/tmp/latest-manifest.yaml 2>/dev/null
   echo "Downloaded to /tmp/latest-manifest.yaml"
 else
   echo "No manifests found in '${STATE_REPO}' repository"
@@ -204,9 +202,8 @@ fi
 #### B3. List all snapshots with timestamps
 
 ```bash
-curl -s -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/artifactory/api/storage/${STATE_REPO}/" \
-  | jq -r '.children[]? | select(.folder==true) | .uri | ltrimstr("/")'
+jf api "/artifactory/api/storage/${STATE_REPO}/" >/tmp/state-storage3.json 2>/dev/null
+jq -r '.children[]? | select(.folder==true) | .uri | ltrimstr("/")' /tmp/state-storage3.json
 ```
 
 ### Operation C: Upload Manifest (Artifactory)
@@ -215,14 +212,14 @@ Run with `required_permissions: ["full_network"]`.
 
 ```bash
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
-curl -sf -X PUT \
-  "$JFROG_URL/artifactory/${STATE_REPO}/${TIMESTAMP}/jfrog-configuration-manifest.yaml" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api "/artifactory/${STATE_REPO}/${TIMESTAMP}/jfrog-configuration-manifest.yaml" -X PUT \
   -H "Content-Type: application/x-yaml" \
-  -T "$MANIFEST_FILE"
+  --input "$MANIFEST_FILE"
 
 echo "Manifest uploaded to: ${STATE_REPO}/${TIMESTAMP}/jfrog-configuration-manifest.yaml"
 ```
+
+**Fallback:** `curl -sf -X PUT "$JFROG_URL/artifactory/${STATE_REPO}/${TIMESTAMP}/jfrog-configuration-manifest.yaml" -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" -H "Content-Type: application/x-yaml" -T "$MANIFEST_FILE"`
 
 Where `$MANIFEST_FILE` is the path to the final manifest YAML file (e.g., `./jfrog-manifest.yaml`).
 

@@ -1,6 +1,6 @@
 # Pre-flight Service Discovery
 
-Run this check **once per session** after login (Step 2 of [login-flow.md](login-flow.md)) to discover which JFrog services are available. This avoids wasting time calling APIs for services that are not deployed on the target instance.
+Run this check **once per session** after login, **platform URL confirmation**, and **readiness** (Steps 1b–1c and Step 2 of [login-flow.md](login-flow.md)) to discover which JFrog services are available. This avoids wasting time calling APIs for services that are not deployed on the target instance.
 
 ## When to Run
 
@@ -10,39 +10,35 @@ Run this check **once per session** after login (Step 2 of [login-flow.md](login
 
 Skip this if the session only uses Artifactory (repos, artifacts, builds) -- Artifactory is always available.
 
-## Pre-flight Script
+## Pre-flight script
 
-Run all service pings in a **single parallel batch** (independent calls):
+Prefer **`jf api`** (see [jf-api-patterns.md](jf-api-patterns.md)); use **`--server-id="$JFROG_SERVER_ID"`** when required. Run service pings in a **single parallel batch** (independent calls). Capture **stdout** (body) and **stderr** (HTTP code) per call when you need status codes.
 
 ```bash
-# Artifactory version and admin check (always available)
-curl -s "$JFROG_URL/artifactory/api/system/version" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN"
+# Artifactory version (always available)
+jf api /artifactory/api/system/version
 
 # Xray
-curl -s -o /dev/null -w "%{http_code}" "$JFROG_URL/xray/api/v1/system/ping"
+jf api /xray/api/v1/system/ping >/tmp/jf-pf-xray.body 2>/tmp/jf-pf-xray.code
+# tr -d '\r\n' < /tmp/jf-pf-xray.code  → expect 200
 
 # Lifecycle (Release Bundles / RLM)
-curl -s -o /dev/null -w "%{http_code}" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/lifecycle/api/v2/promotion/records?limit=1"
+jf api "/lifecycle/api/v2/promotion/records?limit=1" >/tmp/jf-pf-lc.body 2>/tmp/jf-pf-lc.code
 
 # AppTrust (requires explicit --server-id)
 jf apptrust ping --server-id="$JFROG_SERVER_ID" 2>&1
 
 # Curation
-curl -s -o /dev/null -w "%{http_code}" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/curation/api/v1/system/ping"
+jf api /curation/api/v1/system/ping >/tmp/jf-pf-cur.body 2>/tmp/jf-pf-cur.code
 
-# User admin status
-curl -s "$JFROG_URL/artifactory/api/security/users/$USERNAME" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN"
+# User admin status (use a non-reserved variable name, e.g. JFROG_USER_NAME — not USERNAME)
+jf api "/artifactory/api/security/users/${JFROG_USER_NAME}"
 
 # Existing projects
-curl -s "$JFROG_URL/access/api/v1/projects" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN"
+jf api /access/api/v1/projects
 ```
+
+**Fallback** (no CLI or CLI older than 2.100.0): same paths with `curl` and `Authorization: Bearer $JFROG_ACCESS_TOKEN` against `$JFROG_URL`.
 
 ## Interpreting Results
 

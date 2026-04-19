@@ -27,11 +27,12 @@ description: Use when working with ... Triggers on mentions of keyword1, keyword
 ### Style rules
 
 - **Authentication:** Put an "Authentication" section at the top of each `SKILL.md` that includes:
-  - The `Authorization: Bearer $JFROG_ACCESS_TOKEN` header pattern.
-  - Auth per `skills/jfrog-cli/login-flow.md`: the `jf` CLI is required (auto-installed if missing). (1) Resolve the active environment from `jf config show`, asking the user which env if multiple are saved, (2) agent-driven web login that saves credentials via `jf config add`.
+  - **Primary:** JFrog CLI **2.100.0+**, `jf config`, and **`jf api <path>`** per `skills/jfrog-cli/jf-api-patterns.md` (credentials from config; no bearer header in happy path).
+  - **Fallback:** the `Authorization: Bearer $JFROG_ACCESS_TOKEN` header for `curl` when the CLI is missing or below 2.100.0.
+  - Auth per `skills/jfrog-cli/login-flow.md`: (1) resolve the active environment from `jf config show`, (2) **show URLs and ask the user to confirm** the target platform, (3) **`jf api /artifactory/api/v1/system/readiness`** after confirmation, (4) agent-driven web login that saves credentials via `jf config add` if needed.
 - **Pre-flight check:** For skills that depend on a service other than Artifactory (Xray, Curation, AppTrust, Lifecycle/Distribution), add a `> **Pre-flight:**` callout immediately after the Authentication section. This must instruct the agent to ping the service and stop early if unavailable. See `skills/jfrog-cli/preflight.md` for the canonical list of ping endpoints.
 - **Parallelization:** For skills whose operations can be batched (creating multiple repos, users, or packages), add a "Parallelization" section noting which calls are independent and can run concurrently.
-- **API examples:** Use the env var `$JFROG_URL` in URL patterns (e.g. `https://$JFROG_URL/artifactory/api/...`) so examples work out of the box once the user sets the `JFROG_URL` environment variable. Do not hardcode specific JFrog hostnames.
+- **API examples:** Prefer **`jf api /...`** with path-only URLs. For **`curl` fallback**, use `$JFROG_URL` in URL patterns (e.g. `https://$JFROG_URL/artifactory/api/...`). Do not hardcode specific JFrog hostnames.
 - **Official Documentation:** End each `SKILL.md` with an "Official Documentation" (or "Documentation") section listing 2–5 links to the relevant JFrog Help / REST API / CLI docs.
 - **Reference files:** Name API/command catalogs and detailed references as `*-reference.md` (e.g. `rest-api-reference.md`, `aql-reference.md`, `events-reference.md`).
 
@@ -58,7 +59,7 @@ Every skill interacts with authenticated JFrog Platform APIs. These rules apply 
 
 ### Transient session variables
 
-- Token and URL values may be extracted from `jf config` into shell variables for the current session (e.g. for `curl` calls). These are transient and must never be persisted, exported to profiles, or logged.
+- Token and URL values may be extracted from `jf config` into shell variables for the current session (e.g. for **`curl` fallback** or manifest URL checks). Routine calls should use **`jf api`**. These variables are transient and must never be persisted, exported to profiles, or logged.
 - **`JFROG_ACCESS_TOKEN` is sensitive.** Never use it in `echo`, logging, or debug output.
 - **`JFROG_URL` is non-sensitive** and can be displayed freely.
 
@@ -70,12 +71,12 @@ When adding or modifying a skill, verify:
 2. All shell scripts use quoted variables and quoted heredocs for embedded scripts.
 3. Credentials are stored only via `jf config` -- no plaintext files or env var profiles.
 4. No real tokens, passwords, or hostnames appear in examples.
-5. URL validation (ping) precedes any authenticated API call to a new server.
+5. Platform URL confirmation and **`jf api /artifactory/api/v1/system/readiness`** (or ping) precede other authenticated API work on a server.
 6. Skills for non-Artifactory services include a pre-flight ping check (see `skills/jfrog-cli/preflight.md`).
 
 ### Reference file naming
 
-- `rest-api-reference.md`, `api-reference.md` — REST API endpoint summaries and curl-style examples.
+- `rest-api-reference.md`, `api-reference.md` — REST API endpoint summaries; prefer **`jf api`** examples with **`curl`** as fallback where applicable.
 - `*-reference.md` — other product-specific references (AQL, package types, events, CLI command groups).
 
 ## How to update a skill
@@ -186,12 +187,16 @@ Below are the public documentation and source URLs used to create and maintain e
 
 | URL | Feeds into |
 |-----|------------|
-| https://docs.jfrog.com/integrations/docs/jfrog-cli| SKILL.md |
+| https://docs.jfrog.com/integrations/docs/download-and-install-the-jfrog-cli | SKILL.md, login-flow.md |
+| https://docs.jfrog.com/integrations/docs/jfrog-cli | SKILL.md |
+| https://jfrog.com/help/r/jfrog-cli | SKILL.md |
+| https://jfrog.com/help/r/jfrog-cli/cli-for-jfrog-artifactory | artifactory-commands.md |
 | https://docs.jfrog.com/artifactory/docs/binaries-management-with-jfrog-artifactory | artifactory-commands.md |
 | https://jfrog.com/help/r/jfrog-cli/cli-for-jfrog-security | security-commands.md |
 | https://github.com/jfrog/documentation/blob/main/SUMMARY.md | platform-commands.md |
 | https://github.com/jfrog/jfrog-cli (login flow reverse-engineered from source) | login-flow.md |
 | Internal -- service ping endpoints collected from product API references | preflight.md |
+| Internal -- `jf api` usage patterns | jf-api-patterns.md |
 
 ### jfrog-patterns
 

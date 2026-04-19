@@ -1,5 +1,8 @@
 # AppTrust Patterns
 
+
+> **API transport:** Prefer **`jf api`** (JFrog CLI 2.100.0+). See [jf-api-patterns.md](../../jfrog-cli/jf-api-patterns.md). **`curl`** + `$JFROG_URL` examples are **fallback**.
+
 ## 1. Application Entity Creation (`app-trust-application-entity-creation`) [SIMPLE, ~3 min]
 
 **Purpose:** Define application entities with clear business context and ownership.

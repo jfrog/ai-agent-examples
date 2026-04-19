@@ -7,10 +7,14 @@ description: Detect existing project and repository naming patterns on the JFrog
 
 Queries the JFrog Platform for existing projects and repositories, analyzes their naming conventions, and presents the user with a choice between the detected pattern and the standard onboarding pattern.
 
+## API transport
+
+Prefer **`jf api`** per [../../../platform-features/skills/jfrog-cli/jf-api-patterns.md](../../../platform-features/skills/jfrog-cli/jf-api-patterns.md) after `jf config` and platform confirmation. Examples below use **`curl`** as fallback.
+
 ## Inputs
 
-- `JFROG_URL` -- Platform base URL (already loaded)
-- `JFROG_ACCESS_TOKEN` -- Platform Admin scoped access token (already loaded)
+- `JFROG_URL` -- Platform base URL (for `curl` fallback; derive from `jf config show` when using CLI)
+- `JFROG_ACCESS_TOKEN` -- Admin token (for `curl` fallback only)
 - `new_project_key` -- the project key about to be onboarded (used to generate examples)
 - `new_ecosystems` -- list of ecosystems for the new project (used to generate examples)
 - `state_project_key` -- (optional) the state/system project key to exclude from analysis (default: `system`)
@@ -50,17 +54,20 @@ fi
 Run with `required_permissions: ["full_network"]`.
 
 ```bash
-HTTP_CODE=$(curl -s -o /tmp/all-projects.json -w "%{http_code}" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v1/projects")
+BODY=/tmp/all-projects.json
+CODE=/tmp/all-projects.code
+jf api /access/api/v1/projects >"$BODY" 2>"$CODE"
+HTTP_CODE=$(tr -d '\r\n' < "$CODE")
 
 if [ "$HTTP_CODE" = "200" ]; then
-  PROJECT_KEYS=$(jq -r '.[].project_key' /tmp/all-projects.json)
+  PROJECT_KEYS=$(jq -r '.[].project_key' "$BODY")
 else
   echo "WARN: Could not list projects (HTTP $HTTP_CODE). Skipping pattern detection."
   # Use standard pattern
 fi
 ```
+
+**Fallback:** `curl -s -o /tmp/all-projects.json -w "%{http_code}" -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" "$JFROG_URL/access/api/v1/projects"`
 
 Filter out the state project (default key `system`, or the value of `state_project_key` input):
 
@@ -77,12 +84,13 @@ Run with `required_permissions: ["full_network"]`. Collect all repo keys grouped
 ```bash
 ALL_REPOS=""
 for PROJ in $PROJECT_KEYS; do
-  HTTP_CODE=$(curl -s -o /tmp/repos-${PROJ}.json -w "%{http_code}" \
-    -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-    "$JFROG_URL/artifactory/api/repositories?project=${PROJ}")
+  RB=/tmp/repos-${PROJ}.json
+  RC=/tmp/repos-${PROJ}.code
+  jf api "/artifactory/api/repositories?project=${PROJ}" >"$RB" 2>"$RC"
+  HTTP_CODE=$(tr -d '\r\n' < "$RC")
 
   if [ "$HTTP_CODE" = "200" ]; then
-    REPO_KEYS=$(jq -r '.[].key' /tmp/repos-${PROJ}.json)
+    REPO_KEYS=$(jq -r '.[].key' "$RB")
     for RK in $REPO_KEYS; do
       ALL_REPOS="${ALL_REPOS}${PROJ}|${RK}\n"
     done

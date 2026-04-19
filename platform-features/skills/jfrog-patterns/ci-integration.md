@@ -1,5 +1,8 @@
 # CI Integration Patterns
 
+
+> **API transport:** Prefer **`jf api`** (JFrog CLI 2.100.0+). See [jf-api-patterns.md](../../jfrog-cli/jf-api-patterns.md). **`curl`** + `$JFROG_URL` examples are **fallback**.
+
 ## 1. CI Integration (`builds-ci-integration`) [SIMPLE]
 
 **Purpose:** Integrate JFrog with any CI tool to cache dependencies, store build artifacts, and collect Build Info metadata.

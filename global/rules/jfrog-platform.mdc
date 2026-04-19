@@ -5,11 +5,17 @@ alwaysApply: true
 
 # JFrog Platform Conventions
 
-## Environment Variables
+## JFrog CLI and `jf api` (primary)
 
-All JFrog operations expect these env vars:
-- `JFROG_URL` -- Platform base URL (e.g., `https://mycompany.jfrog.io`)
-- `JFROG_ACCESS_TOKEN` -- Platform Admin scoped access token
+- Use **JFrog CLI 2.100.0 or newer** (`jf --version`). Prefer **`jf api <path>`** for all JFrog Platform REST calls; credentials and base URL come from **`jf config`** (see [platform-features/skills/jfrog-cli/jf-api-patterns.md](../../platform-features/skills/jfrog-cli/jf-api-patterns.md) and [platform-features/skills/jfrog-cli/login-flow.md](../../platform-features/skills/jfrog-cli/login-flow.md)).
+- **Before operations:** complete login-flow, then **show URLs from `jf config show`**, ask the user to **confirm** the target instance (one question at a time per [interaction-questions.mdc](interaction-questions.mdc)), then run **`jf api /artifactory/api/v1/system/readiness`** (with `--server-id` if needed). On failure, stop before other API work.
+
+## Environment variables (secondary / fallback)
+
+Use **`JFROG_URL`** and **`JFROG_ACCESS_TOKEN`** for **manifest URL comparison**, **`curl` fallback**, or legacy snippets—not as the primary auth path when the CLI is configured.
+
+- `JFROG_URL` -- Platform base URL (e.g., `https://mycompany.jfrog.io` or host-only, depending on skill examples)
+- `JFROG_ACCESS_TOKEN` -- Bearer token for **`curl`** fallback only
 
 ### Loading from `.env` file
 
@@ -20,7 +26,7 @@ JFROG_URL=https://mycompany.jfrog.io
 JFROG_ACCESS_TOKEN=eyJ...
 ```
 
-Before every JFrog operation, run this loading snippet to ensure the variables are available:
+Before operations that still use `curl` or env-based checks, run this loading snippet when vars are missing:
 
 ```bash
 # Load .env if vars are not already set
@@ -37,34 +43,44 @@ Priority: environment variables already set in the shell take precedence over `.
 
 **Security**: Never commit the `.env` file to git. Ensure `.env` is listed in `.gitignore`.
 
-### Token Validation
+### Token validation (prefer `jf api`)
 
-Before any JFrog provisioning, validate the token in two steps:
+After platform confirmation and readiness, validate credentials with **`jf api`** (use `--server-id` when applicable). `jf api` writes the **response body to stdout** and the **HTTP status code to stderr** (single line). Capture both before parsing JSON.
 
 1. **Authentication check** -- verify the token is valid:
    ```bash
-   curl -s -o /dev/null -w "%{http_code}" \
-     -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-     "$JFROG_URL/artifactory/api/system/version"
+   BODY=/tmp/jf-api-version.json
+   CODE=/tmp/jf-api-version.code
+   jf api /artifactory/api/system/version >"$BODY" 2>"$CODE"
+   HTTP_CODE=$(tr -d '\r\n' < "$CODE")
    ```
-   Expect HTTP 200. Any other code means the token is invalid or the platform is unreachable.
+   Expect HTTP **200**. Any other code means the token is invalid or the platform is unreachable.
 
-2. **Platform admin check** -- verify the token has admin privileges:
+2. **Platform admin check** -- verify admin privileges:
    ```bash
-   curl -s -o /dev/null -w "%{http_code}" \
-     -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-     "$JFROG_URL/access/api/v1/config/security/authentication/basic_authentication_enabled"
+   BODY=/tmp/jf-api-admin.json
+   CODE=/tmp/jf-api-admin.code
+   jf api /access/api/v1/config/security/authentication/basic_authentication_enabled >"$BODY" 2>"$CODE"
+   HTTP_CODE=$(tr -d '\r\n' < "$CODE")
    ```
-   Expect HTTP 200. A 401/403 means the token lacks platform admin privileges.
+   Expect HTTP **200**. A 401/403 means the token lacks platform admin privileges.
 
-Both checks must pass. If authentication fails, check the token and URL. If the admin check fails, **abort immediately** -- do not proceed with any operations. The token **must** be a platform admin token. Generate one from: `{jfrog-url}/ui/admin/configuration/security/access_tokens`.
+Both checks must pass. If authentication fails, check credentials in `jf config`. If the admin check fails, **abort immediately**. The token **must** be a platform admin token. Generate one from: `{jfrog-url}/ui/admin/configuration/security/access_tokens`.
 
-### Connectivity Check
+**Fallback (`curl`):** If the CLI is unavailable or below 2.100.0, use the same endpoints with `curl -s -o body.json -w "%{http_code}"` and `Authorization: Bearer $JFROG_ACCESS_TOKEN` against `$JFROG_URL`.
 
-Before any JFrog API call, verify connectivity. This command requires network access, so use `required_permissions: ["full_network"]` in the Shell tool:
+### Connectivity check
+
+After user confirmation, use readiness as the quick check (requires `required_permissions: ["full_network"]`):
+
 ```bash
-curl -sf -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" "$JFROG_URL/artifactory/api/v1/system/readiness"
+BODY=/tmp/jf-api-readiness.json
+CODE=/tmp/jf-api-readiness.code
+jf api /artifactory/api/v1/system/readiness >"$BODY" 2>"$CODE"
+HTTP_CODE=$(tr -d '\r\n' < "$CODE")
 ```
+
+Expect HTTP **200** and a healthy JSON body. **Fallback:** `curl -sf -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" "$JFROG_URL/artifactory/api/v1/system/readiness"`.
 
 ### Sandbox Permissions Reference
 
@@ -73,19 +89,18 @@ When running commands from Cursor, use the appropriate `required_permissions`:
 - **Git operations** that may need SSH agent or credential helper access: use `["all"]`
 - **Package installs** (`npm install`, `pip install`, etc.): use `["full_network"]`
 
-## REST API Patterns
+## REST API patterns
 
-| Domain | Base Path | Example |
-|--------|-----------|---------|
-| Projects | `$JFROG_URL/access/api/v1/projects` | Create/list/update projects |
-| Repositories | `$JFROG_URL/artifactory/api/repositories` | Create/update repos |
-| Users (platform) | `$JFROG_URL/access/api/v2/users` | Create/get/list/delete platform users |
-| Groups (platform) | `$JFROG_URL/access/api/v2/groups` | Create/get/list/delete platform groups |
-| Users in project | `$JFROG_URL/access/api/v1/projects/{key}/users/{name}` | Add user to project |
-| Groups in project | `$JFROG_URL/access/api/v1/projects/{key}/groups/{name}` | Add group to project |
+| Domain | Path (for `jf api`) | Notes |
+|--------|---------------------|--------|
+| Projects | `/access/api/v1/projects` | `jf api /access/api/v1/projects` |
+| Repositories | `/artifactory/api/repositories` | `jf api /artifactory/api/repositories` |
+| Users (platform) | `/access/api/v2/users` | `jf api /access/api/v2/users/{name}` |
+| Groups (platform) | `/access/api/v2/groups` | `jf api /access/api/v2/groups/{name}` |
+| Users in project | `/access/api/v1/projects/{key}/users/{name}` | |
+| Groups in project | `/access/api/v1/projects/{key}/groups/{name}` | |
 
-Auth header: `Authorization: Bearer $JFROG_ACCESS_TOKEN`
-Content-Type: `application/json`
+**Primary:** `jf api <path>` with JSON body via `-d @file` or `--input file` and `-H "Content-Type: application/json"` as needed. **Fallback:** full URL `$JFROG_URL/...` with `curl` and `Authorization: Bearer $JFROG_ACCESS_TOKEN`.
 
 ## Platform Conventions
 
@@ -121,11 +136,31 @@ If the platform is empty or existing repos already follow the standard pattern, 
 | `$USERNAME` | `$JFROG_USER_NAME` |
 | `local USERNAME=$1` | `local UNAME=$1` or `local JFROG_USER_NAME=$1` |
 
-## Safe API Call Pattern
+## Safe API call pattern
 
-**Never pipe `curl` output directly to `jq`**. API responses may contain non-JSON content (HTML error pages, rate-limit responses) or control characters that crash `jq`. Always capture the HTTP status code first and only parse the body on success.
+**Never pipe API output directly to `jq`**. Responses may be HTML, rate-limit text, or JSON with control characters that break `jq`. Capture **HTTP status** and **body** separately, then parse only on success.
 
-### Standard pattern -- capture status and body separately
+### Standard pattern -- `jf api` (preferred)
+
+`jf api` writes the body to **stdout** and the HTTP status to **stderr** (one line).
+
+```bash
+BODY=/tmp/api-resp.json
+CODE=/tmp/api-resp.code
+jf api /some/api/endpoint >"$BODY" 2>"$CODE"
+HTTP_CODE=$(tr -d '\r\n' < "$CODE")
+
+if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
+  RESULT=$(jq -r '.field' "$BODY")
+else
+  echo "ERROR: API returned HTTP $HTTP_CODE"
+  cat "$BODY"  # may be HTML or error JSON
+fi
+```
+
+Use unique temp file names (e.g., `/tmp/api-resp-$REPO.json`) inside loops.
+
+### Standard pattern -- `curl` (fallback)
 
 ```bash
 HTTP_CODE=$(curl -s -o /tmp/api-resp.json -w "%{http_code}" \
@@ -136,19 +171,19 @@ if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
   RESULT=$(jq -r '.field' /tmp/api-resp.json)
 else
   echo "ERROR: API returned HTTP $HTTP_CODE"
-  cat /tmp/api-resp.json  # may be HTML or error JSON
+  cat /tmp/api-resp.json
 fi
 ```
 
-Use unique temp file names (e.g., `/tmp/api-resp-$REPO.json`) when calling APIs inside loops to avoid file collisions.
-
 ### Avoid these broken patterns
+
+> Prefer **`jf api <path>`** for every JFrog Platform REST call (credentials from **`jf config`**); the anti-patterns below break **`jf api`** and `curl` alike if you pipe bodies or mis-handle HTTP status.
 
 | Pattern | Problem | Fix |
 |---------|---------|-----|
-| `curl ... \| jq '.x'` | Non-JSON response (403 HTML) crashes jq | Capture to file, check status first |
-| `curl -s -w "\n%{http_code}" ...` then `head -n -1` | macOS BSD `head` does not support negative line counts | Use `-o file -w "%{http_code}"` instead |
-| `curl ... \| jq -r '.rclass'` on repo details | Large responses may contain control characters (`U+0000-U+001F`) | Write to file first; if control chars persist, pipe through `tr -d '\000-\037'` before jq |
+| `curl ... \| jq '.x'` or `jf api ... \| jq '.x'` | Non-JSON response (403 HTML, etc.) crashes `jq` | Capture body to file, read HTTP code, then `jq` |
+| `curl -s -w "\n%{http_code}" ...` then `head -n -1` | macOS BSD `head` does not support negative line counts | Use `-o file -w "%{http_code}"` (curl) or separate stdout/stderr files (`jf api`) |
+| `curl ... \| jq -r '.rclass'` on repo details | Large responses may contain control characters (`U+0000-U+001F`) | Write to file first; if control chars persist, pipe through `tr -d '\000-\037'` before `jq` |
 | `GET /artifactory/api/repositories` then `jq '.[] \| select(.projectKey == ...)'` | List API does **not** include `projectKey` in response objects; filter always returns zero results | Use `?project={key}` query parameter to filter server-side ([docs](https://docs.jfrog.com/artifactory/reference/getRepositoriesByTypeAndProject)) |
 
 ### Rate-limit protection

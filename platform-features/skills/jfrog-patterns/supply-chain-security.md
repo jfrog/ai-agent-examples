@@ -1,5 +1,8 @@
 # Supply Chain Security Patterns
 
+
+> **API transport:** Prefer **`jf api`** (JFrog CLI 2.100.0+). See [jf-api-patterns.md](../../jfrog-cli/jf-api-patterns.md). **`curl`** + `$JFROG_URL` examples are **fallback**.
+
 ## 1. Secure Your Supply Chain with Xray (`xray-security`) [INTERMEDIATE]
 
 **Purpose:** Detect, prioritize, and remediate open source risks across the entire SDLC.

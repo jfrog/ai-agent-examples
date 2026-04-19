@@ -1,7 +1,8 @@
 # JFrog Authentication
 
-This document describes how to handle authentication with the JFrog Platform.
-Use `curl` for all REST API calls; do not use Python or other HTTP clients.
+**Primary:** JFrog CLI **2.100.0+** with **`jf config`** and **`jf api`** — see [../../../platform-features/skills/jfrog-cli/jf-api-patterns.md](../../../platform-features/skills/jfrog-cli/jf-api-patterns.md).
+
+**Fallback:** `curl` with `$JFROG_URL` and bearer token when the CLI is unavailable. Do not use Python or other HTTP clients for these examples.
 
 ## Required Tools
 

@@ -1,5 +1,7 @@
 # JFrog Security Scanning Workflow Guide
 
+> **API transport:** Prefer **`jf api`** (JFrog CLI 2.100.0+). See [jf-api-patterns.md](../jfrog-cli/jf-api-patterns.md). **`curl`** + `$JFROG_URL` below is **fallback**.
+
 ## Step 1: Create a Security Policy
 
 Define what constitutes a security violation.

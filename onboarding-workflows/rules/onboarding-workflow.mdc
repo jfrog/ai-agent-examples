@@ -95,7 +95,7 @@ When using a manifest, process each project entry in order.
 
 ### Manifest URL Mismatch Check
 
-When a local manifest file is found (e.g., `jfrog-manifest.yaml`), **always compare** its `jfrog.url` value against the active `$JFROG_URL` from the environment (or `.env` file). If they differ, the manifest belongs to a **different JFrog instance** and must **not** be modified or appended to:
+When a local manifest file is found (e.g., `jfrog-manifest.yaml`), **always compare** its `jfrog.url` value against the **URL of the JFrog instance the user confirmed** from `jf config show` (or against `$JFROG_URL` from the environment / `.env` when using curl fallback). If they differ, the manifest belongs to a **different JFrog instance** and must **not** be modified or appended to:
 
 - **Do not** add new project entries to a manifest targeting a different instance.
 - **Do not** use the manifest as the basis for the current onboarding session.
@@ -139,38 +139,36 @@ This flow is triggered when the user says things like "update JFrog from manifes
 
 Before starting any onboarding, **all** prerequisites below must pass. If **any** check fails, **abort immediately** -- do not proceed with partial onboarding. Report which check(s) failed and guide the user to fix them before retrying.
 
-1. **JFrog credentials**: `JFROG_URL` and `JFROG_ACCESS_TOKEN` are available -- either as environment variables **or** in a `.env` file at the repository root. If not set in the environment, source the `.env` file:
-   ```bash
-   if [ -z "$JFROG_URL" ] || [ -z "$JFROG_ACCESS_TOKEN" ]; then
-     if [ -f .env ]; then
-       set -a; source .env; set +a
-     fi
-   fi
-   ```
-   After sourcing, confirm both variables are non-empty. If still missing, **abort**.
+1. **JFrog CLI and configuration**: JFrog CLI **2.100.0+** is installed (`jf --version`). A server is configured per [platform-features/skills/jfrog-cli/login-flow.md](../../platform-features/skills/jfrog-cli/login-flow.md). Show **`jf config show`** URLs, ask the user to **confirm** the target platform (one question at a time), then run **`jf api /artifactory/api/v1/system/readiness`**; **abort** if not HTTP 200. If the CLI is missing or below 2.100.0, **abort** unless the user explicitly proceeds with **curl** fallback and provides `JFROG_URL` + `JFROG_ACCESS_TOKEN` (from env or `.env`).
 
-2. **Token authentication**: Verify the access token is valid by calling an authenticated endpoint (run with `required_permissions: ["full_network"]`):
+2. **Token authentication**: Verify credentials with **`jf api`** (run with `required_permissions: ["full_network"]`):
    ```bash
-   HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-     -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-     "$JFROG_URL/artifactory/api/system/version")
+   BODY=/tmp/jf-onb-version.json
+   CODE=/tmp/jf-onb-version.code
+   jf api /artifactory/api/system/version >"$BODY" 2>"$CODE"
+   HTTP_CODE=$(tr -d '\r\n' < "$CODE")
    ```
-   HTTP 200 = success. Any other code = token is invalid or platform is unreachable. **Abort** if this fails.
+   HTTP **200** = success. **Fallback:** same endpoint with `curl`, `Authorization: Bearer $JFROG_ACCESS_TOKEN`, and `$JFROG_URL`. **Abort** on failure.
 
-3. **Platform admin privileges** (MANDATORY -- abort if not admin): Verify the token has **platform admin** privileges by calling an admin-only endpoint (run with `required_permissions: ["full_network"]`):
+3. **Platform admin privileges** (MANDATORY -- abort if not admin): Verify **platform admin** (run with `required_permissions: ["full_network"]`):
    ```bash
-   HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-     -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-     "$JFROG_URL/access/api/v1/config/security/authentication/basic_authentication_enabled")
+   BODY=/tmp/jf-onb-admin.json
+   CODE=/tmp/jf-onb-admin.code
+   jf api /access/api/v1/config/security/authentication/basic_authentication_enabled >"$BODY" 2>"$CODE"
+   HTTP_CODE=$(tr -d '\r\n' < "$CODE")
    ```
-   HTTP 200 = admin confirmed. If this fails (401/403), the token does not have admin privileges. **Abort immediately** -- do not proceed with any onboarding steps. Guide the user:
+   HTTP **200** = admin confirmed. **Fallback:** same path with `curl` and bearer token. If this fails (401/403), **abort immediately**. Guide the user:
    > The provided token does not have **platform admin** privileges. This is required for onboarding. Generate an admin token from: `{jfrog-url}/ui/admin/configuration/security/access_tokens`
 
 4. **Subscription type + OIDC gating**: Read `github.oidc_setup` from the manifest (`true` or `false`, defaults to `false`). Then check the JFrog subscription (run with `required_permissions: ["full_network"]`):
    ```bash
-   SUBSCRIPTION_TYPE=$(curl -s -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-     "$JFROG_URL/artifactory/api/system/license" | jq -r '.subscriptionType')
+   BODY=/tmp/jf-onb-license.json
+   CODE=/tmp/jf-onb-license.code
+   jf api /artifactory/api/system/license >"$BODY" 2>"$CODE"
+   HTTP_CODE=$(tr -d '\r\n' < "$CODE")
+   SUBSCRIPTION_TYPE=$(jq -r '.subscriptionType' "$BODY")
    ```
+   **Fallback:** `curl -s -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" "$JFROG_URL/artifactory/api/system/license"` then `jq`. Expect HTTP **200** before parsing.
    OIDC is supported if `subscriptionType` starts with `enterprise_xray` or `enterprise_plus`.
    - If `github.oidc_setup: true` and the subscription **does not** support OIDC: **abort immediately** and tell the user to either upgrade their subscription or set `github.oidc_setup: false`.
    - If `github.oidc_setup: false`: skip OIDC regardless of subscription; use secrets-based auth for CI.
@@ -191,18 +189,21 @@ After parsing the manifest (or receiving interactive input), and **before creati
 
 7. **Users and groups exist -- or offer to create them**: For every user and group listed under `members` across all projects, verify they exist in the JFrog Platform **before** assigning them:
    ```bash
-   # Check user exists
-   curl -s -o /dev/null -w '%{http_code}' \
-     -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-     "$JFROG_URL/access/api/v2/users/$JFROG_USER_NAME"
+   # Check user exists (prefer jf api)
+   BODY=/tmp/jf-user-check.json
+   CODE=/tmp/jf-user-check.code
+   jf api "/access/api/v2/users/${JFROG_USER_NAME}" >"$BODY" 2>"$CODE"
+   HTTP_CODE=$(tr -d '\r\n' < "$CODE")
    # Expect 200. 404 means user does not exist.
 
    # Check group exists
-   curl -s -o /dev/null -w '%{http_code}' \
-     -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-     "$JFROG_URL/access/api/v2/groups/$GROUPNAME"
+   BODY=/tmp/jf-group-check.json
+   CODE=/tmp/jf-group-check.code
+   jf api "/access/api/v2/groups/${GROUPNAME}" >"$BODY" 2>"$CODE"
+   HTTP_CODE=$(tr -d '\r\n' < "$CODE")
    # Expect 200. 404 means group does not exist.
    ```
+   **Fallback:** same paths with `curl`, bearer token, and `$JFROG_URL`.
    Run with `required_permissions: ["full_network"]`. Check **all** users and groups across **all** projects and collect **all** failures. If any are missing:
    - **Display** every missing user/group in a clear list
    - **Offer to create them** using the `jfrog-create-users-groups` skill:

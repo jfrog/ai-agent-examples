@@ -5,6 +5,8 @@ description: Add users and groups to a JFrog Platform project with role assignme
 
 # JFrog Manage Members
 
+Prefer **`jf api`** ([../../../platform-features/skills/jfrog-cli/jf-api-patterns.md](../../../platform-features/skills/jfrog-cli/jf-api-patterns.md)); **`curl`** below is **fallback**.
+
 Adds users and groups to a JFrog project with appropriate role assignments.
 
 ## Inputs
@@ -44,9 +46,7 @@ Custom roles defined in the project are also supported -- use the exact role nam
 ## Add a User to a Project
 
 ```bash
-curl -sf -X PUT \
-  "$JFROG_URL/access/api/v1/projects/$PROJECT_KEY/users/$JFROG_USER_NAME" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api "/access/api/v1/projects/$PROJECT_KEY/users/$JFROG_USER_NAME" -X PUT \
   -H "Content-Type: application/json" \
   -d '{
     "name": "'"$JFROG_USER_NAME"'",
@@ -57,9 +57,7 @@ curl -sf -X PUT \
 ## Add a Group to a Project
 
 ```bash
-curl -sf -X PUT \
-  "$JFROG_URL/access/api/v1/projects/$PROJECT_KEY/groups/$GROUPNAME" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api "/access/api/v1/projects/$PROJECT_KEY/groups/$GROUPNAME" -X PUT \
   -H "Content-Type: application/json" \
   -d '{
     "name": "'"$GROUPNAME"'",
@@ -71,12 +69,10 @@ curl -sf -X PUT \
 
 ```bash
 # Users
-curl -sf -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v1/projects/$PROJECT_KEY/users" | jq .
+jf api "/access/api/v1/projects/$PROJECT_KEY/users" | jq .
 
 # Groups
-curl -sf -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v1/projects/$PROJECT_KEY/groups" | jq .
+jf api "/access/api/v1/projects/$PROJECT_KEY/groups" | jq .
 ```
 
 ## Pre-Assignment Validation (MANDATORY)
@@ -86,9 +82,8 @@ Before assigning **any** user or group to a project, you **must** verify they ex
 ### Check user exists (run with `required_permissions: ["full_network"]`)
 
 ```bash
-HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v2/users/$JFROG_USER_NAME")
+jf api "/access/api/v2/users/$JFROG_USER_NAME" >/tmp/jf-mm-user.json 2>/tmp/jf-mm-user.code
+HTTP_CODE=$(tr -d '\r\n' < /tmp/jf-mm-user.code)
 
 if [ "$HTTP_CODE" = "200" ]; then
   echo "OK: User '$JFROG_USER_NAME' exists"
@@ -100,9 +95,8 @@ fi
 ### Check group exists (run with `required_permissions: ["full_network"]`)
 
 ```bash
-HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v2/groups/$GROUPNAME")
+jf api "/access/api/v2/groups/$GROUPNAME" >/tmp/jf-mm-group.json 2>/tmp/jf-mm-group.code
+HTTP_CODE=$(tr -d '\r\n' < /tmp/jf-mm-group.code)
 
 if [ "$HTTP_CODE" = "200" ]; then
   echo "OK: Group '$GROUPNAME' exists"

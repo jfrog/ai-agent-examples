@@ -5,6 +5,8 @@ description: Reconcile JFrog Platform state with a desired-state manifest. Reads
 
 # JFrog Reconcile Manifest
 
+Prefer **`jf api`** ([../../../platform-features/skills/jfrog-cli/jf-api-patterns.md](../../../platform-features/skills/jfrog-cli/jf-api-patterns.md)) after `jf config`; **`curl`** remains valid **fallback** for the same paths.
+
 Given a manifest YAML describing the desired state, compare it against the current JFrog Platform state and apply only the differences -- after user approval.
 
 ## Inputs
@@ -80,9 +82,8 @@ STATE_PROJECT=$(yq -r '.state.artifactory.project // "system"' "$MANIFEST_FILE")
 STATE_REPO=$(yq -r '.state.artifactory.repository // "system-configuration"' "$MANIFEST_FILE")
 
 # Check if the state repo exists
-STATUS=$(curl -s -o /dev/null -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/artifactory/api/repositories/${STATE_REPO}")
+jf api "/artifactory/api/repositories/${STATE_REPO}" >/tmp/rec-state-repo.json 2>/tmp/rec-state-repo.code
+STATUS=$(tr -d '\r\n' < /tmp/rec-state-repo.code)
 
 if [ "$STATUS" != "200" ]; then
   echo "INFO: State repository '${STATE_REPO}' does not exist. No baseline available."
@@ -90,14 +91,12 @@ if [ "$STATUS" != "200" ]; then
   BASELINE_FILE=""
 else
   # Use Operation B from jfrog-system-config-repo to get the latest manifest
-  LATEST_FOLDER=$(curl -s -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-    "$JFROG_URL/artifactory/api/storage/${STATE_REPO}/" \
-    | jq -r '[.children[]? | select(.folder==true) | .uri] | sort | last')
+  jf api "/artifactory/api/storage/${STATE_REPO}/" >/tmp/rec-storage.json 2>/dev/null
+  LATEST_FOLDER=$(jq -r '[.children[]? | select(.folder==true) | .uri] | sort | last' /tmp/rec-storage.json)
 
   if [ "$LATEST_FOLDER" != "null" ] && [ -n "$LATEST_FOLDER" ]; then
-    curl -s -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-      "$JFROG_URL/artifactory/${STATE_REPO}${LATEST_FOLDER}/jfrog-configuration-manifest.yaml" \
-      -o /tmp/baseline-manifest.yaml
+    jf api "/artifactory/${STATE_REPO}${LATEST_FOLDER}/jfrog-configuration-manifest.yaml" \
+      >/tmp/baseline-manifest.yaml 2>/dev/null
     echo "OK: Retrieved baseline manifest from ${STATE_REPO}${LATEST_FOLDER}"
     BASELINE_FILE="/tmp/baseline-manifest.yaml"
   else
@@ -126,14 +125,12 @@ Store the baseline (if any) as `BASELINE_FILE` for use in Phase 2.
 
 For each project listed in the manifest, query the JFrog Platform to discover what currently exists. All API calls run with `required_permissions: ["full_network"]`.
 
-**IMPORTANT**: Follow the **Safe API Call Pattern** from the `jfrog-platform` rule -- never pipe `curl` directly to `jq`. Always capture the HTTP status code and response body separately, check the status before parsing. Add `sleep 1` between calls in loops to avoid rate limiting.
+**IMPORTANT**: Prefer **`jf api`** ([../../../platform-features/skills/jfrog-cli/jf-api-patterns.md](../../../platform-features/skills/jfrog-cli/jf-api-patterns.md)). Follow the **Safe API Call Pattern** from the `jfrog-platform` rule -- never pipe API stdout directly to `jq`. Capture HTTP status and body separately (`jf api` writes status to stderr), check the status before parsing. Add `sleep 1` between calls in loops to avoid rate limiting.
 
 ### 1.1 Projects
 
 ```bash
-STATUS=$(curl -s -o /tmp/project-$PROJECT_KEY.json -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v1/projects/$PROJECT_KEY")
+STATUS=$( (jf api "/access/api/v1/projects/$PROJECT_KEY" >/tmp/project-$PROJECT_KEY.json 2>/tmp/project-$PROJECT_KEY.code) ; tr -d '\r\n' < /tmp/project-$PROJECT_KEY.code )
 # 200 = exists (details in temp file), 404 = does not exist
 if [ "$STATUS" = "200" ]; then
   jq . /tmp/project-$PROJECT_KEY.json
@@ -143,9 +140,7 @@ fi
 ### 1.2 Repositories
 
 ```bash
-HTTP_CODE=$(curl -s -o /tmp/repos-$PROJECT_KEY.json -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/artifactory/api/repositories?project=$PROJECT_KEY")
+HTTP_CODE=$( (jf api "/artifactory/api/repositories?project=$PROJECT_KEY" >/tmp/repos-$PROJECT_KEY.json 2>/tmp/repos-$PROJECT_KEY.code) ; tr -d '\r\n' < /tmp/repos-$PROJECT_KEY.code )
 
 if [ "$HTTP_CODE" = "200" ]; then
   REPO_KEYS=$(jq -r '.[].key' /tmp/repos-$PROJECT_KEY.json)
@@ -155,9 +150,7 @@ fi
 
 # For each repo, get details including xrayIndex (with rate-limit protection)
 for REPO_KEY in $REPO_KEYS; do
-  HTTP_CODE=$(curl -s -o /tmp/repo-$REPO_KEY.json -w '%{http_code}' \
-    -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-    "$JFROG_URL/artifactory/api/repositories/$REPO_KEY")
+  HTTP_CODE=$( (jf api "/artifactory/api/repositories/$REPO_KEY" >/tmp/repo-$REPO_KEY.json 2>/tmp/repo-$REPO_KEY.code) ; tr -d '\r\n' < /tmp/repo-$REPO_KEY.code )
   if [ "$HTTP_CODE" = "200" ]; then
     jq '{key, rclass, packageType, xrayIndex}' /tmp/repo-$REPO_KEY.json
   fi
@@ -168,16 +161,12 @@ done
 ### 1.3 Members
 
 ```bash
-HTTP_CODE=$(curl -s -o /tmp/users-$PROJECT_KEY.json -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v1/projects/$PROJECT_KEY/users")
+HTTP_CODE=$( (jf api "/access/api/v1/projects/$PROJECT_KEY/users" >/tmp/users-$PROJECT_KEY.json 2>/tmp/users-$PROJECT_KEY.code) ; tr -d '\r\n' < /tmp/users-$PROJECT_KEY.code )
 if [ "$HTTP_CODE" = "200" ]; then
   CURRENT_USERS=$(cat /tmp/users-$PROJECT_KEY.json)
 fi
 
-HTTP_CODE=$(curl -s -o /tmp/groups-$PROJECT_KEY.json -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v1/projects/$PROJECT_KEY/groups")
+HTTP_CODE=$( (jf api "/access/api/v1/projects/$PROJECT_KEY/groups" >/tmp/groups-$PROJECT_KEY.json 2>/tmp/groups-$PROJECT_KEY.code) ; tr -d '\r\n' < /tmp/groups-$PROJECT_KEY.code )
 if [ "$HTTP_CODE" = "200" ]; then
   CURRENT_GROUPS=$(cat /tmp/groups-$PROJECT_KEY.json)
 fi
@@ -186,15 +175,12 @@ fi
 ### 1.4 OIDC (if `github.oidc_setup: true`)
 
 ```bash
-HTTP_CODE=$(curl -s -o /tmp/oidc-providers.json -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v1/oidc")
+HTTP_CODE=$( (jf api "/access/api/v1/oidc" >/tmp/oidc-providers.json 2>/tmp/oidc-providers.code) ; tr -d '\r\n' < /tmp/oidc-providers.code )
 
 if [ "$HTTP_CODE" = "200" ]; then
   for PROVIDER_NAME in $(jq -r '.[].name' /tmp/oidc-providers.json); do
-    curl -s -o /tmp/oidc-mappings-$PROVIDER_NAME.json -w '%{http_code}' \
-      -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-      "$JFROG_URL/access/api/v1/oidc/${PROVIDER_NAME}/identity_mappings"
+    jf api "/access/api/v1/oidc/${PROVIDER_NAME}/identity_mappings" \
+      >/tmp/oidc-mappings-$PROVIDER_NAME.json 2>/tmp/oidc-mappings-$PROVIDER_NAME.code
     sleep 1
   done
 fi
@@ -203,9 +189,7 @@ fi
 ### 1.5 Xray Indexing Status
 
 ```bash
-HTTP_CODE=$(curl -s -o /tmp/xray-binmgr.json -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/xray/api/v1/binMgr")
+HTTP_CODE=$( (jf api "/xray/api/v1/binMgr" >/tmp/xray-binmgr.json 2>/tmp/xray-binmgr.code) ; tr -d '\r\n' < /tmp/xray-binmgr.code )
 
 if [ "$HTTP_CODE" = "200" ]; then
   BIN_MGR_ID=$(jq -r '.[0].bin_mgr_id // "default"' /tmp/xray-binmgr.json)
@@ -213,9 +197,7 @@ else
   BIN_MGR_ID="default"
 fi
 
-HTTP_CODE=$(curl -s -o /tmp/xray-indexed.json -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/xray/api/v1/binMgr/$BIN_MGR_ID/repos")
+HTTP_CODE=$( (jf api "/xray/api/v1/binMgr/$BIN_MGR_ID/repos" >/tmp/xray-indexed.json 2>/tmp/xray-indexed.code) ; tr -d '\r\n' < /tmp/xray-indexed.code )
 
 if [ "$HTTP_CODE" = "200" ]; then
   INDEXED_REPOS=$(jq '.indexed_repos' /tmp/xray-indexed.json)
@@ -229,9 +211,7 @@ fi
 
 ```bash
 # For each remote repo, check curation status (with rate-limit protection)
-HTTP_CODE=$(curl -s -o /tmp/curation-$REPO_KEY.json -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/curation/api/v1/repos/${REPO_KEY}")
+HTTP_CODE=$( (jf api "/curation/api/v1/repos/${REPO_KEY}" >/tmp/curation-$REPO_KEY.json 2>/tmp/curation-$REPO_KEY.code) ; tr -d '\r\n' < /tmp/curation-$REPO_KEY.code )
 if [ "$HTTP_CODE" = "200" ]; then
   CURATED=$(jq -r '.curated // false' /tmp/curation-$REPO_KEY.json)
 fi
@@ -459,8 +439,7 @@ Only proceed after the user explicitly approves the changes. Execute only the de
 For repos that already exist but need config updates (e.g., changed description, xrayIndex toggle):
 
 ```bash
-curl -sf -X POST "$JFROG_URL/artifactory/api/repositories/$REPO_KEY" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api "/artifactory/api/repositories/$REPO_KEY" -X POST \
   -H "Content-Type: application/json" \
   -d "$UPDATED_JSON_PAYLOAD"
 ```
@@ -476,8 +455,7 @@ For repos where Xray indexing needs to change:
 Step 1: Set `xrayIndex: true` on each repo's Artifactory config (add a 1-second delay between calls to avoid rate limiting):
 
 ```bash
-curl -sf -X POST "$JFROG_URL/artifactory/api/repositories/$REPO_KEY" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api "/artifactory/api/repositories/$REPO_KEY" -X POST \
   -H "Content-Type: application/json" \
   -d '{"xrayIndex": true}'
 sleep 1
@@ -487,9 +465,7 @@ Step 2: After all repo configs are updated, merge new repos into the Xray index:
 
 ```bash
 # GET existing indexed repos (safe pattern: check status before parsing)
-HTTP_CODE=$(curl -s -o /tmp/xray-current.json -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/xray/api/v1/binMgr/$BIN_MGR_ID/repos")
+HTTP_CODE=$( (jf api "/xray/api/v1/binMgr/$BIN_MGR_ID/repos" >/tmp/xray-current.json 2>/tmp/xray-current.code) ; tr -d '\r\n' < /tmp/xray-current.code )
 
 if [ "$HTTP_CODE" = "200" ]; then
   EXISTING=$(jq '.indexed_repos // []' /tmp/xray-current.json)
@@ -505,12 +481,11 @@ NEW_REPOS='[{"name":"REPO1","type":"local","pkg_type":"npm"}, ...]'
 MERGED=$(echo "$EXISTING" "$NEW_REPOS" \
   | jq -s 'add | group_by(.name) | map(.[0])')
 
-# PUT the merged list
-HTTP_CODE=$(curl -s -o /tmp/xray-put-resp.json -w '%{http_code}' \
-  -X PUT "$JFROG_URL/xray/api/v1/binMgr/$BIN_MGR_ID/repos" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "{\"indexed_repos\": $MERGED}")
+# PUT the merged list (write body to file; jf api uses --input for JSON body)
+echo "{\"indexed_repos\": $MERGED}" >/tmp/xray-merged.json
+jf api "/xray/api/v1/binMgr/$BIN_MGR_ID/repos" -X PUT -H "Content-Type: application/json" \
+  --input /tmp/xray-merged.json >/tmp/xray-put-resp.json 2>/tmp/xray-put-resp.code
+HTTP_CODE=$(tr -d '\r\n' < /tmp/xray-put-resp.code)
 
 if [ "$HTTP_CODE" = "200" ]; then
   echo "OK: Xray index updated"
@@ -522,8 +497,7 @@ fi
 **Disable indexing** (update repo config):
 
 ```bash
-curl -sf -X POST "$JFROG_URL/artifactory/api/repositories/$REPO_KEY" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api "/artifactory/api/repositories/$REPO_KEY" -X POST \
   -H "Content-Type: application/json" \
   -d '{"xrayIndex": false}'
 ```
@@ -534,14 +508,12 @@ For remote repos where Curation needs to change:
 
 ```bash
 # Enable
-curl -sf -X PUT "$JFROG_URL/curation/api/v1/repos/${REPO_KEY}" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api "/curation/api/v1/repos/${REPO_KEY}" -X PUT \
   -H "Content-Type: application/json" \
   -d '{"curated": true}'
 
 # Disable
-curl -sf -X PUT "$JFROG_URL/curation/api/v1/repos/${REPO_KEY}" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api "/curation/api/v1/repos/${REPO_KEY}" -X PUT \
   -H "Content-Type: application/json" \
   -d '{"curated": false}'
 ```
@@ -554,15 +526,13 @@ For removals (only after individual user approval):
 
 ```bash
 # Remove user from project
-curl -sf -X DELETE \
-  "$JFROG_URL/access/api/v1/projects/$PROJECT_KEY/users/$JFROG_USER_NAME" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN"
+jf api "/access/api/v1/projects/$PROJECT_KEY/users/$JFROG_USER_NAME" -X DELETE
 
 # Remove group from project
-curl -sf -X DELETE \
-  "$JFROG_URL/access/api/v1/projects/$PROJECT_KEY/groups/$GROUPNAME" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN"
+jf api "/access/api/v1/projects/$PROJECT_KEY/groups/$GROUPNAME" -X DELETE
 ```
+
+**Fallback:** same paths with `curl -sf -X DELETE` and bearer token.
 
 ### 4.6 OIDC changes
 

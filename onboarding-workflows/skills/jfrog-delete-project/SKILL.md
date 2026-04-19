@@ -5,6 +5,8 @@ description: Delete a JFrog project and all its repositories. Use when the user 
 
 # Delete JFrog Project
 
+Prefer **`jf api`** ([../../../platform-features/skills/jfrog-cli/jf-api-patterns.md](../../../platform-features/skills/jfrog-cli/jf-api-patterns.md)); **`curl`** is **fallback** where shown.
+
 This skill safely deletes a JFrog project and handles its associated repositories. Repos that are shared with other projects are **unassigned** (preserved) instead of deleted. It includes multiple confirmation steps and cross-project checks to prevent accidental data loss.
 
 ## Trigger Phrases
@@ -70,15 +72,13 @@ If credentials are missing, prompt the user:
 
 1. **Check authentication** is valid:
    ```bash
-   curl -s -f -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-     "${JFROG_URL}/artifactory/api/system/version"
+   jf api /artifactory/api/system/version
    ```
 
 2. **Check platform admin privileges**:
    ```bash
-   HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-     -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-     "${JFROG_URL}/access/api/v1/config/security/authentication/basic_authentication_enabled")
+   jf api /access/api/v1/config/security/authentication/basic_authentication_enabled >/tmp/jf-del-admin.json 2>/tmp/jf-del-admin.code
+   HTTP_CODE=$(tr -d '\r\n' < /tmp/jf-del-admin.code)
    ```
 
    If HTTP code is 401 or 403:
@@ -145,17 +145,15 @@ The user's input may be a project key or a display name. Check both to find the 
 ```bash
 USER_INPUT="user-provided-value"
 
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-  -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  "${JFROG_URL}/access/api/v1/projects/${USER_INPUT}")
+jf api "/access/api/v1/projects/${USER_INPUT}" >/tmp/jf-del-proj.json 2>/tmp/jf-del-proj.code
+HTTP_CODE=$(tr -d '\r\n' < /tmp/jf-del-proj.code)
 ```
 
 **If found (HTTP 200)**, use it as the project key:
 
 ```bash
 PROJECT_KEY="${USER_INPUT}"
-PROJECT_DETAILS=$(curl -s -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  "${JFROG_URL}/access/api/v1/projects/${PROJECT_KEY}")
+PROJECT_DETAILS=$(cat /tmp/jf-del-proj.json)
 DISPLAY_NAME=$(echo "${PROJECT_DETAILS}" | jq -r '.display_name')
 echo "Found project: ${DISPLAY_NAME} (key: ${PROJECT_KEY})"
 ```
@@ -164,8 +162,7 @@ echo "Found project: ${DISPLAY_NAME} (key: ${PROJECT_KEY})"
 
 ```bash
 # List all projects and search by display name (case-insensitive)
-MATCH=$(curl -s -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  "${JFROG_URL}/access/api/v1/projects" | \
+MATCH=$(jf api /access/api/v1/projects | \
   jq -r --arg name "${USER_INPUT}" \
   '.[] | select(.display_name | ascii_downcase == ($name | ascii_downcase)) | .project_key')
 
@@ -193,9 +190,8 @@ If the project exists, list all repositories that will be deleted.
 
 ```bash
 # Get all repositories in the project using the project query parameter
-REPOS=$(curl -s -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  "${JFROG_URL}/artifactory/api/repositories?project=${PROJECT_KEY}" | \
-  jq -r ".[].key")
+jf api "/artifactory/api/repositories?project=${PROJECT_KEY}" >/tmp/jf-del-repos.json 2>/dev/null
+REPOS=$(jq -r ".[].key" /tmp/jf-del-repos.json)
 
 echo "Repositories in project ${PROJECT_KEY}:"
 echo "${REPOS}"
@@ -205,9 +201,8 @@ If no repos are returned by the query parameter approach, fall back to **naming 
 
 ```bash
 if [ -z "$REPOS" ]; then
-  REPOS=$(curl -s -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-    "${JFROG_URL}/artifactory/api/repositories" | \
-    jq -r --arg prefix "${PROJECT_KEY}-" '.[] | select(.key | startswith($prefix)) | .key')
+  jf api /artifactory/api/repositories >/tmp/jf-del-repos-all.json 2>/dev/null
+  REPOS=$(jq -r --arg prefix "${PROJECT_KEY}-" '.[] | select(.key | startswith($prefix)) | .key' /tmp/jf-del-repos-all.json)
 
   if [ -n "$REPOS" ]; then
     echo "Found repos by naming convention (${PROJECT_KEY}-*):"
@@ -223,14 +218,13 @@ Before deleting any repository, check whether it is also referenced by other JFr
 **List all projects and collect their repos** (with `sleep 1` between calls for rate-limit protection):
 
 ```bash
-ALL_PROJECTS=$(curl -s -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  "${JFROG_URL}/access/api/v1/projects" | jq -r '.[].project_key')
+ALL_PROJECTS=$(jf api /access/api/v1/projects | jq -r '.[].project_key')
 
 OTHER_REPOS=""
 for OTHER_KEY in ${ALL_PROJECTS}; do
   if [ "$OTHER_KEY" = "$PROJECT_KEY" ]; then continue; fi
-  PROJ_REPOS=$(curl -s -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-    "${JFROG_URL}/artifactory/api/repositories?project=${OTHER_KEY}" | jq -r '.[].key')
+  jf api "/artifactory/api/repositories?project=${OTHER_KEY}" >/tmp/jf-del-other-repos.json 2>/dev/null
+  PROJ_REPOS=$(jq -r '.[].key' /tmp/jf-del-other-repos.json)
   OTHER_REPOS="${OTHER_REPOS} ${PROJ_REPOS}"
   sleep 1
 done
@@ -305,10 +299,8 @@ Handle repos in two phases. Unassign shared repos first, then delete non-shared 
 for REPO in ${REPOS_TO_UNASSIGN}; do
   echo "Unassigning repository: ${REPO} (shared with other projects)"
 
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-    -X DELETE \
-    -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-    "${JFROG_URL}/access/api/v1/projects/_/attach/repositories/${REPO}")
+  jf api "/access/api/v1/projects/_/attach/repositories/${REPO}" -X DELETE >/dev/null 2>/tmp/jf-del-unassign.code
+  HTTP_CODE=$(tr -d '\r\n' < /tmp/jf-del-unassign.code)
 
   if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "204" ]; then
     echo "Unassigned: ${REPO}"
@@ -325,10 +317,8 @@ done
 for REPO in ${REPOS_TO_DELETE}; do
   echo "Deleting repository: ${REPO}"
 
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-    -X DELETE \
-    -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-    "${JFROG_URL}/artifactory/api/repositories/${REPO}")
+  jf api "/artifactory/api/repositories/${REPO}" -X DELETE >/dev/null 2>/tmp/jf-del-repo.code
+  HTTP_CODE=$(tr -d '\r\n' < /tmp/jf-del-repo.code)
 
   if [ "$HTTP_CODE" = "200" ]; then
     echo "Deleted: ${REPO}"
@@ -345,10 +335,8 @@ After all repositories have been unassigned or deleted, delete the project:
 
 ```bash
 # Delete the project
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-  -X DELETE \
-  -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  "${JFROG_URL}/access/api/v1/projects/${PROJECT_KEY}")
+jf api "/access/api/v1/projects/${PROJECT_KEY}" -X DELETE >/dev/null 2>/tmp/jf-del-projdel.code
+HTTP_CODE=$(tr -d '\r\n' < /tmp/jf-del-projdel.code)
 
 if [ "$HTTP_CODE" = "204" ] || [ "$HTTP_CODE" = "200" ]; then
   echo "Project '${PROJECT_KEY}' deleted successfully"
@@ -384,8 +372,7 @@ If there are no repos in either category, omit that section from the summary.
 ### Check Project Exists
 
 ```bash
-curl -s -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  "${JFROG_URL}/access/api/v1/projects/${PROJECT_KEY}"
+jf api "/access/api/v1/projects/${PROJECT_KEY}"
 ```
 
 - `200` = Project exists
@@ -396,9 +383,7 @@ curl -s -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
 Use the `project` query parameter to filter repos server-side ([docs](https://jfrog.com/help/r/jfrog-rest-apis/get-repositories-by-type-and-project)). The list API response does **not** include `projectKey` in its objects, so client-side filtering on that field will always return zero results.
 
 ```bash
-curl -s -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  "${JFROG_URL}/artifactory/api/repositories?project=${PROJECT_KEY}" | \
-  jq -r ".[].key"
+jf api "/artifactory/api/repositories?project=${PROJECT_KEY}" | jq -r ".[].key"
 ```
 
 ### Unassign Repository from Project
@@ -406,9 +391,7 @@ curl -s -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
 Removes the project assignment from a repository without deleting it. The repo and its artifacts are preserved. See [Unassign a Project from a Repository](https://docs.jfrog.com/projects/docs/project-management-tasks).
 
 ```bash
-curl -X DELETE \
-  -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  "${JFROG_URL}/access/api/v1/projects/_/attach/repositories/${REPO_KEY}"
+jf api "/access/api/v1/projects/_/attach/repositories/${REPO_KEY}" -X DELETE
 ```
 
 - `200` / `204` = Repository unassigned successfully
@@ -417,9 +400,7 @@ curl -X DELETE \
 ### Delete Repository
 
 ```bash
-curl -X DELETE \
-  -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  "${JFROG_URL}/artifactory/api/repositories/${REPO_KEY}"
+jf api "/artifactory/api/repositories/${REPO_KEY}" -X DELETE
 ```
 
 - `200` = Repository deleted
@@ -428,9 +409,7 @@ curl -X DELETE \
 ### Delete Project
 
 ```bash
-curl -X DELETE \
-  -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  "${JFROG_URL}/access/api/v1/projects/${PROJECT_KEY}"
+jf api "/access/api/v1/projects/${PROJECT_KEY}" -X DELETE
 ```
 
 - `204` = Project deleted

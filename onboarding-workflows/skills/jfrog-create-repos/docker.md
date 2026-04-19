@@ -48,8 +48,7 @@ For Docker, create three repositories:
 Creates a cache/proxy to Docker Hub:
 
 ```bash
-curl -X PUT "${JFROG_URL}/artifactory/api/repositories/${PROJECT_KEY}-docker-remote" \
-  -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
+jf api "/artifactory/api/repositories/${PROJECT_KEY}-docker-remote" -X PUT \
   -H "Content-Type: application/json" \
   -d '{
     "key": "'${PROJECT_KEY}'-docker-remote",
@@ -66,8 +65,7 @@ curl -X PUT "${JFROG_URL}/artifactory/api/repositories/${PROJECT_KEY}-docker-rem
 Stores your built Docker images:
 
 ```bash
-curl -X PUT "${JFROG_URL}/artifactory/api/repositories/${PROJECT_KEY}-docker-local" \
-  -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
+jf api "/artifactory/api/repositories/${PROJECT_KEY}-docker-local" -X PUT \
   -H "Content-Type: application/json" \
   -d '{
     "key": "'${PROJECT_KEY}'-docker-local",
@@ -83,8 +81,7 @@ curl -X PUT "${JFROG_URL}/artifactory/api/repositories/${PROJECT_KEY}-docker-loc
 Aggregates local and remote -- developers use this registry:
 
 ```bash
-curl -X PUT "${JFROG_URL}/artifactory/api/repositories/${PROJECT_KEY}-docker" \
-  -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
+jf api "/artifactory/api/repositories/${PROJECT_KEY}-docker" -X PUT \
   -H "Content-Type: application/json" \
   -d '{
     "key": "'${PROJECT_KEY}'-docker",
@@ -345,8 +342,7 @@ After pushing, the image should appear in JFrog:
 
 ```bash
 # List images in repository
-curl -s -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  "${JFROG_URL}/artifactory/api/docker/${PROJECT_KEY}-docker-local/v2/_catalog"
+jf api "/artifactory/api/docker/${PROJECT_KEY}-docker-local/v2/_catalog"
 ```
 
 ## Multi-Platform Builds

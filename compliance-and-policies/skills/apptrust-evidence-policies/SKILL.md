@@ -3,6 +3,9 @@ name: Apptrust Evidence Policies
 description: Create JFrog project lifecycle policies that check for evidence existence on promotion or release events for applications with specific labels. Use when the user asks to create a policy, evidence policy, promotion policy, lifecycle policy, compliance check, or evidence validation for application promotions. Triggers on mentions of policy, evidence policy, promotion policy, lifecycle policy, compliance check, evidence validation, AppTrust promotion.
 ---
 
+
+> **API transport:** Prefer **`jf api`** (JFrog CLI 2.100.0+). See [jf-api-patterns.md](../../../platform-features/skills/jfrog-cli/jf-api-patterns.md) (path-only URLs; auth from `jf config`). Examples using **`curl`** with `$JFROG_URL` + bearer token are **fallback** when the CLI is missing or below 2.100.0.
+
 # Evidence Promotion Policy Creator
 
 Create a JFrog lifecycle policy that validates evidence exists before allowing application promotion, scoped to applications with specific labels.
