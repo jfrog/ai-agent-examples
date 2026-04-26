@@ -229,11 +229,11 @@ curl -s -X POST \
 
 ## Official Documentation
 
-- [Templates API](https://jfrog.com/help/r/jfrog-rest-apis/templates)
-- [Rules API](https://jfrog.com/help/r/jfrog-rest-apis/rules)
-- [Lifecycle Policies API](https://jfrog.com/help/r/jfrog-rest-apis/lifecycle-policies)
-- [JFrog AppTrust](https://jfrog.com/help/r/jfrog-security-documentation/jfrog-apptrust)
-- [Evidence Management](https://jfrog.com/help/r/jfrog-artifactory-documentation/evidence-management)
+- [Templates API](https://docs.jfrog.com/releases/docs/deprecations-in-process)
+- [Rules API](https://docs.jfrog.com/governance/reference/ruleslist)
+- [Lifecycle Policies API](https://docs.jfrog.com/governance/reference/policieslist)
+- [JFrog AppTrust](https://docs.jfrog.com/governance/docs/jfrog-apptrust)
+- [Evidence Management](https://docs.jfrog.com/governance/docs/evidence-management)
 
 ## Related skills
 

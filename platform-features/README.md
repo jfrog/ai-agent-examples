@@ -77,7 +77,7 @@ Skills are derived from public JFrog documentation and REST APIs. See [CONTRIBUT
 
 - [JFrog Help Center](https://jfrog.com/help/home)
 - [JFrog REST APIs](https://jfrog.com/help/r/jfrog-rest-apis)
-- [JFrog CLI Documentation](https://jfrog.com/help/r/jfrog-cli)
+- [JFrog CLI Documentation](https://docs.jfrog.com/integrations/docs/jfrog-cli)
 - [Evidence Examples (GitHub)](https://github.com/jfrog/Evidence-Examples)
 
 ## Related examples

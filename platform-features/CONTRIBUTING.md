@@ -108,41 +108,41 @@ Below are the public documentation and source URLs used to create and maintain e
 
 | URL | Feeds into |
 |-----|------------|
-| https://jfrog.com/help/r/jfrog-rest-apis/artifactory-rest-apis | rest-api-reference.md |
-| https://jfrog.com/help/r/jfrog-artifactory-documentation/repository-management | SKILL.md, rest-api-reference.md |
-| https://jfrog.com/help/r/jfrog-artifactory-documentation/federated-repositories | SKILL.md |
-| https://jfrog.com/help/r/jfrog-artifactory-documentation/using-aql | aql-reference.md |
+| https://docs.jfrog.com/integrations/docs/jfrog-api | rest-api-reference.md |
+| https://docs.jfrog.com/artifactory/docs/repository-management | SKILL.md, rest-api-reference.md |
+| https://docs.jfrog.com/artifactory/docs/federated-repositories | SKILL.md |
+| https://docs.jfrog.com/artifactory/docs/artifactory-query-language | aql-reference.md |
 | Package-type registry URLs (Docker, Maven, npm, PyPI, Go, Helm, NuGet, Terraform, Cargo, Conan, Pub, etc.) | package-types-reference.md |
 
 ### jfrog-security
 
 | URL | Feeds into |
 |-----|------------|
-| https://jfrog.com/help/r/xray-rest-apis | xray-api-reference.md |
-| https://jfrog.com/help/r/jfrog-security-user-guide/products/xray | SKILL.md, scanning-guide.md |
-| https://jfrog.com/help/r/jfrog-security-user-guide/products/advanced-security | SKILL.md |
-| https://jfrog.com/help/r/jfrog-security-user-guide/products/runtime | SKILL.md |
-| https://jfrog.com/help/r/jfrog-security-user-guide/products/runtime/apis | SKILL.md |
+| https://docs.jfrog.com/security/reference/about-security-apis | xray-api-reference.md |
+| https://docs.jfrog.com/security/docs/xray | SKILL.md, scanning-guide.md |
+| https://docs.jfrog.com/security/docs/advanced-security | SKILL.md |
+| https://docs.jfrog.com/security/docs/runtime | SKILL.md |
+| https://docs.jfrog.com/security/docs/apis | SKILL.md |
 
 ### jfrog-access
 
 | URL | Feeds into |
 |-----|------------|
 | https://jfrog.com/help/r/jfrog-rest-apis/access-tokens | api-reference.md |
-| https://jfrog.com/help/r/jfrog-rest-apis/permissions | api-reference.md |
-| https://jfrog.com/help/r/jfrog-platform-administration-documentation/projects | SKILL.md |
-| https://jfrog.com/help/r/jfrog-platform-administration-documentation/access-federation | SKILL.md |
-| https://jfrog.com/help/r/jfrog-rest-apis/get-project-environments | SKILL.md |
+| https://docs.jfrog.com/administration/reference/getPermissions | api-reference.md |
+| https://docs.jfrog.com/projects/docs/projects| SKILL.md |
+| https://docs.jfrog.com/administration/docs/access-federation | SKILL.md |
+| https://docs.jfrog.com/administration/reference/getProjectEnvironments | SKILL.md |
 
 ### jfrog-distribution
 
 | URL | Feeds into |
 |-----|------------|
 | https://jfrog.com/help/r/jfrog-rest-apis/distribution-rest-apis | api-reference.md |
-| https://jfrog.com/help/r/jfrog-artifactory-documentation/release-lifecycle-management | SKILL.md, api-reference.md |
-| https://jfrog.com/help/r/jfrog-artifactory-documentation/evidence-management | SKILL.md |
-| https://jfrog.com/help/r/jfrog-artifactory-documentation/create-evidence-using-rest-apis | SKILL.md |
-| https://jfrog.com/help/r/jfrog-rest-apis/prepare-evidence | SKILL.md |
+| https://docs.jfrog.com/governance/docs/release-lifecycle-management | SKILL.md, api-reference.md |
+| https://docs.jfrog.com/governance/docs/evidence-management | SKILL.md |
+| https://docs.jfrog.com/governance/docs/create-evidence-using-rest-apis | SKILL.md |
+| https://docs.jfrog.com/governance/reference/prepareevidence | SKILL.md |
 | https://github.com/jfrog/Evidence-Examples | SKILL.md, api-reference.md |
 
 ### jfrog-apptrust
@@ -156,7 +156,7 @@ Below are the public documentation and source URLs used to create and maintain e
 
 | URL | Feeds into |
 |-----|------------|
-| https://jfrog.com/help/r/jfrog-security-user-guide/products/curation | SKILL.md |
+| https://docs.jfrog.com/security/docs/curation-intro | SKILL.md |
 | https://jfrog.com/curation | SKILL.md |
 
 ### jfrog-mission-control
@@ -170,24 +170,24 @@ Below are the public documentation and source URLs used to create and maintain e
 
 | URL | Feeds into |
 |-----|------------|
-| https://jfrog.com/help/r/jfrog-security-user-guide/products/runtime | SKILL.md |
-| https://jfrog.com/help/r/jfrog-security-user-guide/products/runtime/apis | SKILL.md, api-reference.md |
+| https://docs.jfrog.com/security/docs/runtime | SKILL.md |
+| https://docs.jfrog.com/security/docs/apis | SKILL.md, api-reference.md |
 
 ### jfrog-workers
 
 | URL | Feeds into |
 |-----|------------|
-| https://jfrog.com/help/r/jfrog-platform-administration-documentation/workers | SKILL.md |
-| https://jfrog.com/help/r/jfrog-platform-administration-documentation/typescript-code-for-workers | SKILL.md |
-| https://jfrog.com/help/r/jfrog-rest-apis/create-worker | SKILL.md, api-reference.md |
-| https://jfrog.com/help/r/jfrog-platform-administration-documentation/supported-worker-events | events-reference.md |
+| https://docs.jfrog.com/administration/docs/workers-overview | SKILL.md |
+| https://docs.jfrog.com/administration/docs/typescript-code-for-workers| SKILL.md |
+| https://docs.jfrog.com/administration/reference/createWorker | SKILL.md, api-reference.md |
+| https://docs.jfrog.com/administration/docs/configure-workers-for-custom-flows | events-reference.md |
 
 ### jfrog-cli
 
 | URL | Feeds into |
 |-----|------------|
-| https://jfrog.com/help/r/jfrog-cli | SKILL.md |
-| https://jfrog.com/help/r/jfrog-cli/cli-for-jfrog-artifactory | artifactory-commands.md |
+| https://docs.jfrog.com/integrations/docs/jfrog-cli| SKILL.md |
+| https://docs.jfrog.com/artifactory/docs/binaries-management-with-jfrog-artifactory | artifactory-commands.md |
 | https://jfrog.com/help/r/jfrog-cli/cli-for-jfrog-security | security-commands.md |
 | https://github.com/jfrog/documentation/blob/main/SUMMARY.md | platform-commands.md |
 | https://github.com/jfrog/jfrog-cli (login flow reverse-engineered from source) | login-flow.md |
@@ -197,14 +197,14 @@ Below are the public documentation and source URLs used to create and maintain e
 
 | URL or source | Feeds into |
 |---------------|------------|
-| https://jfrog.com/help/r/jfrog-integrations-documentation/build-integration | ci-integration.md |
-| https://jfrog.com/help/r/jfrog-artifactory-documentation/repository-management | repositories.md |
-| https://jfrog.com/help/r/jfrog-artifactory-documentation/release-lifecycle-management | release-lifecycle.md |
-| https://jfrog.com/help/r/jfrog-artifactory-documentation/evidence-management | release-lifecycle.md, ci-integration.md |
-| https://jfrog.com/help/r/jfrog-security-user-guide/products/xray | supply-chain-security.md |
-| https://jfrog.com/help/r/jfrog-security-user-guide/products/advanced-security | supply-chain-security.md |
-| https://jfrog.com/help/r/jfrog-security-user-guide/products/runtime | supply-chain-security.md |
-| https://jfrog.com/help/r/jfrog-security-user-guide/products/curation | supply-chain-security.md |
+| https://docs.jfrog.com/integrations/docs/build-integration| ci-integration.md |
+| https://docs.jfrog.com/artifactory/docs/repository-management | repositories.md |
+| https://docs.jfrog.com/governance/docs/release-lifecycle-management| release-lifecycle.md |
+| https://docs.jfrog.com/governance/docs/evidence-management | release-lifecycle.md, ci-integration.md |
+| https://docs.jfrog.com/security/docs/xray | supply-chain-security.md |
+| https://docs.jfrog.com/security/docs/advanced-security | supply-chain-security.md |
+| https://docs.jfrog.com/security/docs/runtime | supply-chain-security.md |
+| https://docs.jfrog.com/security/docs/curation-intro | supply-chain-security.md |
 | https://jfrog.com/help/r/jfrog-rest-apis/apptrust-rest-apis | apptrust.md |
 | https://github.com/jfrog/Evidence-Examples | release-lifecycle.md, ci-integration.md |
 | Application source extraction (`.cursor/plans/extract_patterns_&_getstarted_info_b018056f.plan.md`) | All pattern files, journeys.md, SKILL.md |
@@ -215,7 +215,7 @@ Below are the public documentation and source URLs used to create and maintain e
 | URL | Notes |
 |-----|--------|
 | https://jfrog.com/help/home | JFrog Help Center landing |
-| https://jfrog.com/help/r/jfrog-rest-apis | REST API index |
+| https://docs.jfrog.com/integrations/docs/jfrog-api | REST API index |
 
 When you add a new documentation URL to any skill, add a row to the appropriate table above (and to the general section if it applies to multiple skills).
 

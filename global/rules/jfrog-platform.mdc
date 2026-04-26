@@ -149,7 +149,7 @@ Use unique temp file names (e.g., `/tmp/api-resp-$REPO.json`) when calling APIs 
 | `curl ... \| jq '.x'` | Non-JSON response (403 HTML) crashes jq | Capture to file, check status first |
 | `curl -s -w "\n%{http_code}" ...` then `head -n -1` | macOS BSD `head` does not support negative line counts | Use `-o file -w "%{http_code}"` instead |
 | `curl ... \| jq -r '.rclass'` on repo details | Large responses may contain control characters (`U+0000-U+001F`) | Write to file first; if control chars persist, pipe through `tr -d '\000-\037'` before jq |
-| `GET /artifactory/api/repositories` then `jq '.[] \| select(.projectKey == ...)'` | List API does **not** include `projectKey` in response objects; filter always returns zero results | Use `?project={key}` query parameter to filter server-side ([docs](https://jfrog.com/help/r/jfrog-rest-apis/get-repositories-by-type-and-project)) |
+| `GET /artifactory/api/repositories` then `jq '.[] \| select(.projectKey == ...)'` | List API does **not** include `projectKey` in response objects; filter always returns zero results | Use `?project={key}` query parameter to filter server-side ([docs](https://docs.jfrog.com/artifactory/reference/getRepositoriesByTypeAndProject)) |
 
 ### Rate-limit protection
 
