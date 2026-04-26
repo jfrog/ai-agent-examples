@@ -1,6 +1,6 @@
 # Agent-Driven Login Flow (Multi-Environment)
 
-This procedure resolves which JFrog Platform environment to use, authenticates if needed, and persists credentials via `jf config`. The agent executes this flow itself. Requires Artifactory 7.64.0+ and the JFrog CLI (`jf`).
+This procedure resolves which JFrog Platform environment to use, authenticates if needed, and persists credentials via `jf config`. The agent executes this flow itself. Requires Artifactory 7.64.0+ and the **JFrog CLI (`jf`) 2.100.0 or newer** (for **`jf api`** and the patterns in [jf-api-patterns.md](jf-api-patterns.md)).
 
 ## Security Rules
 
@@ -35,7 +35,18 @@ Confirm the installation succeeded:
 jf --version
 ```
 
-If installation fails, ask the user to install manually from the [JFrog CLI install page](https://jfrog.com/help/r/jfrog-cli/install-the-jfrog-cli).
+**Minimum version 2.100.0** (required for `jf api`):
+
+```bash
+VER=$(jf --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+MIN="2.100.0"
+if [ -z "$VER" ] || [ "$(printf '%s\n%s' "$MIN" "$VER" | sort -V | tail -1)" != "$VER" ]; then
+  echo "ERROR: JFrog CLI must be $MIN or newer (found: ${VER:-none}). Upgrade from the install docs."
+  exit 1
+fi
+```
+
+If installation fails, ask the user to install manually from [Install JFrog CLI](https://docs.jfrog.com/integrations/docs/download-and-install-the-jfrog-cli) (see also [JFrog CLI on jfrog.com](https://jfrog.com/help/r/jfrog-cli/install-the-jfrog-cli)).
 
 ## Step 1 -- Resolve the Active Environment
 
@@ -59,9 +70,30 @@ jf config use <server-id>
 
 If no servers are configured, ask the user: "What is your JFrog Platform URL? (e.g. `https://mycompany.jfrog.io`)" -- then proceed to web login.
 
+## Step 1b -- Confirm platform URL (wrong-instance guard)
+
+After the intended server is selected (`jf config use` if needed):
+
+1. Run **`jf config show`** and **list each Server ID and JFrog Platform URL** (or paste the relevant lines into chat).
+2. Ask the user **one clear question**: whether this is the correct JFrog instance for the task (or which server id to use if they want to switch). If only one server exists, still show its URL once so they can catch a mismatch with a manifest `jfrog.url` or their intent.
+3. If they need a different server, run `jf config use <server-id>` and repeat this step.
+
+## Step 1c -- Readiness check
+
+Only **after** the user confirms the platform in Step 1b:
+
+```bash
+BODY=/tmp/jf-readiness.json
+CODE=/tmp/jf-readiness.code
+jf api /artifactory/api/v1/system/readiness >"$BODY" 2>"$CODE"
+HTTP_CODE=$(tr -d '\r\n' < "$CODE")
+```
+
+Expect **HTTP 200**. Add **`--server-id=<id>`** if the active default is not the confirmed server. On failure, stop and fix URL/credentials before other API calls.
+
 ## Step 2 -- Extract Active Credentials
 
-Once the active environment is resolved (from `jf config` or after web login), extract URL and token into transient shell variables for the current session. These are used by `curl` commands in other skills.
+Once the active environment is resolved (from `jf config` or after web login), **Steps 1b–1c** have succeeded, and readiness passed, extract URL and token into transient shell variables for the current session. These variables support **manifest URL checks**, **`curl` fallback**, and skills that still reference `$JFROG_URL` / `$JFROG_ACCESS_TOKEN`. **Preferred** JFrog REST access is **`jf api`** (see [jf-api-patterns.md](jf-api-patterns.md)) and does not require exporting the token for each call.
 
 **Preferred method** -- reliable extraction via `jf config export`:
 
@@ -196,12 +228,14 @@ export JFROG_URL=$(echo "$JFROG_PLATFORM_URL" | sed 's|https://||;s|/$||')
 export JFROG_ACCESS_TOKEN="$ACCESS_TOKEN"
 
 echo "--- Verifying authentication ---"
-jf rt curl -s "/api/system/version" --server-id="$JFROG_HOST"
+jf api /artifactory/api/system/version --server-id="$JFROG_HOST"
 ```
 
 - **HTTP 200** from the token endpoint -- login succeeded; the script continues to save and verify.
 - **HTTP 400** -- user has not completed login yet. Ask the user to try again.
-- **Verification output** -- the final `jf rt curl` call should return a JSON object with a `version` field. If it returns a 401 error, the token was not saved correctly -- fall back to [Manual Token Setup](#fallback-manual-token-setup).
+- **Verification output** -- the final `jf api` call should return a JSON object with a `version` field on stdout (HTTP status on stderr). If it returns a 401 error, the token was not saved correctly -- fall back to [Manual Token Setup](#fallback-manual-token-setup).
+
+Then run **Step 1b** (confirm platform URL) and **Step 1c** (readiness) for this server before other operations.
 
 The server ID is derived from the hostname: `https://mycompany.jfrog.io` becomes `mycompany`, `https://acme.jfrog.io` becomes `acme`. For self-hosted URLs like `https://artifactory.internal.corp`, the full hostname is slugified: `artifactory-internal-corp`.
 
@@ -225,7 +259,7 @@ To switch to a different saved environment during a session:
 jf config use <server-id>
 ```
 
-Then re-extract transient credentials for the new environment (same as Step 2).
+Then re-run **Step 1b** and **Step 1c** for the new server, and re-extract transient credentials (**Step 2**).
 
 ## Fallback: Manual Token Setup
 

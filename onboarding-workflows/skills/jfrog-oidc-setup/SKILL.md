@@ -5,6 +5,8 @@ description: Configure OpenID Connect (OIDC) integration between GitHub Actions 
 
 # JFrog OIDC Setup
 
+Prefer **`jf api`** per [../../../platform-features/skills/jfrog-cli/jf-api-patterns.md](../../../platform-features/skills/jfrog-cli/jf-api-patterns.md) for JFrog REST calls; **`curl`** in examples is **fallback** when the CLI is unavailable.
+
 Configures OpenID Connect (OIDC) integration between GitHub Actions and JFrog Platform, enabling secretless authentication for CI workflows.
 
 ## Overview
@@ -60,8 +62,8 @@ First, check the user's preference from the manifest (`OIDC_SETUP`). Then verify
 ### Subscription Check (if not already done)
 
 ```bash
-SUBSCRIPTION_TYPE=$(curl -s -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/artifactory/api/system/license" | jq -r '.subscriptionType')
+jf api /artifactory/api/system/license >/tmp/oidc-license.json 2>/tmp/oidc-license.code
+SUBSCRIPTION_TYPE=$(jq -r '.subscriptionType' /tmp/oidc-license.json)
 
 if [[ "$SUBSCRIPTION_TYPE" == enterprise_xray* ]] || [[ "$SUBSCRIPTION_TYPE" == enterprise_plus* ]]; then
   OIDC_AVAILABLE=true
@@ -113,8 +115,8 @@ fi
 ### Check existing providers (run with `required_permissions: ["full_network"]`)
 
 ```bash
-PROVIDERS=$(curl -s -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v1/oidc")
+jf api /access/api/v1/oidc >/tmp/oidc-providers.json 2>/tmp/oidc-providers.code
+PROVIDERS=$(cat /tmp/oidc-providers.json)
 
 # Check if a provider with the correct issuer_url already exists
 EXISTING_PROVIDER=$(echo "$PROVIDERS" | jq -r --arg url "$ISSUER_URL" \
@@ -138,8 +140,7 @@ else
   PROVIDER_NAME="github-enterprise-oidc"
 fi
 
-curl -sf -X POST "$JFROG_URL/access/api/v1/oidc" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api /access/api/v1/oidc -X POST \
   -H "Content-Type: application/json" \
   -d '{
     "name": "'"$PROVIDER_NAME"'",
@@ -159,8 +160,8 @@ For **each repo** in `github_repos`, check if an identity mapping already exists
 ### Check existing mappings (run with `required_permissions: ["full_network"]`)
 
 ```bash
-MAPPINGS=$(curl -s -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v1/oidc/${PROVIDER_NAME}/identity_mappings")
+jf api "/access/api/v1/oidc/${PROVIDER_NAME}/identity_mappings" >/tmp/oidc-mappings.json 2>/dev/null
+MAPPINGS=$(cat /tmp/oidc-mappings.json)
 
 REPO="owner/repo"  # from github_repos[]
 
@@ -177,8 +178,7 @@ If no existing mapping covers the repo:
 # Sanitize repo name for mapping name (replace / with -)
 MAPPING_NAME=$(echo "$REPO" | tr '/' '-')
 
-curl -sf -X POST "$JFROG_URL/access/api/v1/oidc/${PROVIDER_NAME}/identity_mappings" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api /access/api/v1/oidc/${PROVIDER_NAME}/identity_mappings -X POST \
   -H "Content-Type: application/json" \
   -d '{
     "name": "'"${MAPPING_NAME}-main"'",
@@ -198,8 +198,7 @@ curl -sf -X POST "$JFROG_URL/access/api/v1/oidc/${PROVIDER_NAME}/identity_mappin
 ### Create mapping for PRs (read-only access)
 
 ```bash
-curl -sf -X POST "$JFROG_URL/access/api/v1/oidc/${PROVIDER_NAME}/identity_mappings" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api /access/api/v1/oidc/${PROVIDER_NAME}/identity_mappings -X POST \
   -H "Content-Type: application/json" \
   -d '{
     "name": "'"${MAPPING_NAME}-pr"'",

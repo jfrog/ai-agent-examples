@@ -1,5 +1,8 @@
 # Multi-Site Architecture Patterns
 
+
+> **API transport:** Prefer **`jf api`** (JFrog CLI 2.100.0+). See [jf-api-patterns.md](../../jfrog-cli/jf-api-patterns.md). **`curl`** + `$JFROG_URL` examples are **fallback**.
+
 All multi-site patterns are **ADVANCED** and require multiple JFrog Platform Deployments (JPDs).
 
 ## 1. Active/Standby with DNS Failover (`multi-site-active-standby-with-dns-failover`)

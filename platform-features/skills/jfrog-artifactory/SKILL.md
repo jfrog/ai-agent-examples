@@ -3,6 +3,9 @@ name: JFrog Artifactory
 description: Use when working with JFrog Artifactory -- managing repositories, deploying/downloading artifacts, querying with AQL, configuring builds, replication, or federation. Triggers on mentions of artifactory, repository, artifact, deploy, docker registry, build info, AQL, replication, or federation.
 ---
 
+
+> **API transport:** Prefer **`jf api`** (JFrog CLI 2.100.0+). See [jf-api-patterns.md](../jfrog-cli/jf-api-patterns.md) (path-only URLs; auth from `jf config`). Examples using **`curl`** with `$JFROG_URL` + bearer token are **fallback** when the CLI is missing or below 2.100.0.
+
 # JFrog Artifactory Skill
 
 ## Authentication

@@ -3,6 +3,9 @@ name: JFrog Curation
 description: Use when working with JFrog Curation -- managing package curation policies, auditing blocked packages, configuring curated repositories, or managing waivers. Triggers on mentions of curation, package firewall, blocked package, curated repository, waiver, or supply chain policy.
 ---
 
+
+> **API transport:** Prefer **`jf api`** (JFrog CLI 2.100.0+). See [jf-api-patterns.md](../jfrog-cli/jf-api-patterns.md) (path-only URLs; auth from `jf config`). Examples using **`curl`** with `$JFROG_URL` + bearer token are **fallback** when the CLI is missing or below 2.100.0.
+
 # JFrog Curation Skill
 
 ## Authentication

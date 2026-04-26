@@ -5,6 +5,8 @@ description: Set up JFrog Curation with protection policies on an existing JFrog
 
 # JFrog Curation Onboarding
 
+Prefer **`jf api`** ([../../../platform-features/skills/jfrog-cli/jf-api-patterns.md](../../../platform-features/skills/jfrog-cli/jf-api-patterns.md)); **`curl`** is **fallback** where shown.
+
 Sets up JFrog Curation protection on an existing JFrog Platform instance by verifying Curation is enabled and creating a set of security, license, and operational risk policies across remote repositories. Malicious packages are blocked; all other policy violations are logged in dry-run mode with email notifications.
 
 ## Trigger Phrases
@@ -68,13 +70,11 @@ EXISTING_REPOS=$(jq -r '.repo_include' /tmp/existing-policy.json)
 NEW_REPOS='["proj2-npm-remote","proj2-pypi-remote"]'
 MERGED_REPOS=$(echo "$EXISTING_REPOS" "$NEW_REPOS" | jq -s 'add | unique')
 
-HTTP_CODE=$(curl -s -o /tmp/curation-update-resp.json -w "%{http_code}" \
-  -X PUT "$JFROG_URL/xray/api/v1/curation/policies/$EXISTING_POLICY_ID" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "$(jq -n --argjson repos "$MERGED_REPOS" \
-    --arg email "$CURATION_NOTIFY_EMAIL" \
-    '{repo_include: $repos, notify_emails: [$email]}')")
+jq -n --argjson repos "$MERGED_REPOS" --arg email "$CURATION_NOTIFY_EMAIL" \
+  '{repo_include: $repos, notify_emails: [$email]}' >/tmp/curation-update.json
+jf api "/xray/api/v1/curation/policies/$EXISTING_POLICY_ID" -X PUT -H "Content-Type: application/json" \
+  --input /tmp/curation-update.json >/tmp/curation-update-resp.json 2>/tmp/curation-update-resp.code
+HTTP_CODE=$(tr -d '\r\n' < /tmp/curation-update-resp.code)
 
 if [ "$HTTP_CODE" = "200" ]; then
   echo "OK: Policy updated with new repos"
@@ -106,9 +106,8 @@ echo "OK: JFROG_ACCESS_TOKEN is set"
 ### Step 1a: Validate token (run with `required_permissions: ["full_network"]`)
 
 ```bash
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/artifactory/api/system/version")
+jf api /artifactory/api/system/version >/tmp/jf-cur-ver.json 2>/tmp/jf-cur-ver.code
+HTTP_CODE=$(tr -d '\r\n' < /tmp/jf-cur-ver.code)
 
 if [ "$HTTP_CODE" = "200" ]; then
   echo "OK: Token authentication successful"
@@ -121,9 +120,8 @@ fi
 ### Step 1b: Validate platform admin privileges (run with `required_permissions: ["full_network"]`)
 
 ```bash
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v1/config/security/authentication/basic_authentication_enabled")
+jf api /access/api/v1/config/security/authentication/basic_authentication_enabled >/tmp/jf-cur-admin.json 2>/tmp/jf-cur-admin.code
+HTTP_CODE=$(tr -d '\r\n' < /tmp/jf-cur-admin.code)
 
 if [ "$HTTP_CODE" = "200" ]; then
   echo "OK: Platform admin privileges confirmed"
@@ -171,9 +169,7 @@ The skill creates the following 8 curation policies. **Block Malicious** blocks 
 Verify that Curation is enabled on the platform. Uses the safe API call pattern.
 
 ```bash
-HTTP_CODE=$(curl -s -o /tmp/curation-status.json -w "%{http_code}" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/artifactory/api/curation/status")
+HTTP_CODE=$( (jf api "/artifactory/api/curation/status" >/tmp/curation-status.json 2>/tmp/curation-status.code) ; tr -d '\r\n' < /tmp/curation-status.code )
 
 if [ "$HTTP_CODE" = "200" ]; then
   echo "OK: Curation API is reachable"
@@ -207,9 +203,7 @@ fi
 Before creating policies, discover the remote repositories and their curation status. Use the curation-specific endpoint which returns the `curated` boolean and `project` for each repo.
 
 ```bash
-HTTP_CODE=$(curl -s -o /tmp/curation-remote-repos.json -w "%{http_code}" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/artifactory/api/curation/repositories")
+HTTP_CODE=$( (jf api "/artifactory/api/curation/repositories" >/tmp/curation-remote-repos.json 2>/tmp/curation-remote-repos.code) ; tr -d '\r\n' < /tmp/curation-remote-repos.code )
 
 if [ "$HTTP_CODE" = "200" ]; then
   echo "OK: Retrieved remote repositories with curation status"
@@ -303,11 +297,9 @@ Check whether the target repos have `curated: true` (from Step 3 data). For any 
 
 ```bash
 # Enable curation on a single repo
-HTTP_CODE=$(curl -s -o /tmp/curation-enable-resp.json -w "%{http_code}" \
-  -X POST "$JFROG_URL/artifactory/api/repositories/$REPO_KEY" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"curated": true}')
+jf api "/artifactory/api/repositories/$REPO_KEY" -X POST -H "Content-Type: application/json" \
+  -d '{"curated": true}' >/tmp/curation-enable-resp.json 2>/tmp/curation-enable-resp.code
+HTTP_CODE=$(tr -d '\r\n' < /tmp/curation-enable-resp.code)
 
 if [ "$HTTP_CODE" = "200" ]; then
   echo "OK: Curation enabled on $REPO_KEY"
@@ -366,11 +358,10 @@ for i in $(seq 0 $(($POLICY_COUNT - 1))); do
       notify_emails: [$email]
     }')
 
-  HTTP_CODE=$(curl -s -o /tmp/curation-policy-resp.json -w "%{http_code}" \
-    -X POST "$JFROG_URL/xray/api/v1/curation/policies" \
-    -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "$PAYLOAD")
+  echo "$PAYLOAD" >/tmp/curation-policy-payload.json
+  jf api /xray/api/v1/curation/policies -X POST -H "Content-Type: application/json" \
+    --input /tmp/curation-policy-payload.json >/tmp/curation-policy-resp.json 2>/tmp/curation-policy-resp.code
+  HTTP_CODE=$(tr -d '\r\n' < /tmp/curation-policy-resp.code)
 
   if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
     echo "OK: Policy '$POLICY_NAME' created successfully (global scope)"
@@ -415,11 +406,10 @@ for i in $(seq 0 $(($POLICY_COUNT - 1))); do
       notify_emails: [$email]
     }')
 
-  HTTP_CODE=$(curl -s -o /tmp/curation-policy-resp.json -w "%{http_code}" \
-    -X POST "$JFROG_URL/xray/api/v1/curation/policies" \
-    -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "$PAYLOAD")
+  echo "$PAYLOAD" >/tmp/curation-policy-payload.json
+  jf api /xray/api/v1/curation/policies -X POST -H "Content-Type: application/json" \
+    --input /tmp/curation-policy-payload.json >/tmp/curation-policy-resp.json 2>/tmp/curation-policy-resp.code
+  HTTP_CODE=$(tr -d '\r\n' < /tmp/curation-policy-resp.code)
 
   if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
     echo "OK: Policy '$POLICY_NAME' created for selected project repos"
@@ -458,9 +448,7 @@ done
 Confirm all policies exist by listing all curation policies.
 
 ```bash
-HTTP_CODE=$(curl -s -o /tmp/curation-policies-list.json -w "%{http_code}" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/xray/api/v1/curation/policies")
+HTTP_CODE=$( (jf api "/xray/api/v1/curation/policies" >/tmp/curation-policies-list.json 2>/tmp/curation-policies-list.code) ; tr -d '\r\n' < /tmp/curation-policies-list.code )
 
 if [ "$HTTP_CODE" = "200" ]; then
   echo "Current curation policies:"

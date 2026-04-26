@@ -1,11 +1,13 @@
 ---
 name: JFrog CLI
-description: Use when working with the JFrog CLI (jf command) -- uploading/downloading artifacts, running security scans, managing builds, creating release bundles, or configuring the JFrog Platform from the command line. Triggers on mentions of jf command, jfrog cli, jf rt, jf audit, jf scan, jf docker, file spec, or jf config.
+description: Use when working with the JFrog CLI (jf command) -- uploading/downloading artifacts, running security scans, managing builds, creating release bundles, configuring the JFrog Platform from the command line, or invoking platform REST APIs via jf api. Triggers on mentions of jf command, jfrog cli, jf api, jf rt, jf audit, jf scan, jf docker, file spec, or jf config.
 ---
 
 # JFrog CLI Skill
 
 ## Installation
+
+See [Install JFrog CLI](https://docs.jfrog.com/integrations/docs/download-and-install-the-jfrog-cli).
 
 ```bash
 # macOS
@@ -18,17 +20,23 @@ curl -fL https://install-cli.jfrog.io | sh
 docker run releases-docker.jfrog.io/jfrog/jfrog-cli jf --version
 ```
 
-Requires JFrog CLI v2+ (all commands use `jf` prefix).
+Requires **JFrog CLI 2.100.0+** for **`jf api`** (platform REST). Other `jf` commands need a recent v2.x CLI.
 
 ## Authentication
 
 Follow [login-flow.md](login-flow.md) to resolve the active JFrog environment. The `jf` CLI is required and will be installed automatically if missing. The flow supports multiple environments and persists credentials via `jf config` (encrypted at rest):
 
-1. **Ensure `jf` is installed** -- checks for the CLI and installs it if missing.
+1. **Ensure `jf` is installed** at **2.100.0+** (required for `jf api`).
 2. **Check saved credentials** -- runs `jf config show` to list configured servers. If multiple are saved, asks the user which environment to use.
-3. **Agent-driven web login** -- if no credentials exist, asks the user for their JFrog URL, drives the REST-based login flow (user clicks a link, authenticates in browser), and saves the resulting token via `jf config add`.
+3. **Confirm platform URL** -- show URLs from `jf config show`; user confirms or switches server.
+4. **Readiness** -- `jf api /artifactory/api/v1/system/readiness` after confirmation.
+5. **Agent-driven web login** -- if no credentials exist, asks the user for their JFrog URL, drives the REST-based login flow (user clicks a link, authenticates in browser), and saves the resulting token via `jf config add`.
 
 After login, credentials are saved with a server ID derived from the hostname (e.g. `mycompany` from `mycompany.jfrog.io`) so the user can switch between environments with `jf config use <server-id>`.
+
+## Platform REST via `jf api`
+
+Prefer **`jf api <path>`** for JFrog Platform HTTP APIs (path only; auth from `jf config`). See **[jf-api-patterns.md](jf-api-patterns.md)** for session start (confirm URL → readiness), status/body capture, and **`curl` fallback** rules.
 
 ## Configuration
 
@@ -130,12 +138,14 @@ When building and pushing multiple Docker images, run the builds concurrently us
 
 ## Reference Files
 
+- [jf-api-patterns.md](jf-api-patterns.md) -- **`jf api`** (REST), confirm platform, readiness, safe captures
 - [artifactory-commands.md](artifactory-commands.md) -- All `jf rt` and package manager commands
 - [security-commands.md](security-commands.md) -- All scanning and audit commands
 - [platform-commands.md](platform-commands.md) -- Distribution, workers, evidence, config commands
 
 ## Official Documentation
 
+- [Install JFrog CLI](https://docs.jfrog.com/integrations/docs/download-and-install-the-jfrog-cli)
 - [JFrog CLI Documentation](https://jfrog.com/help/r/jfrog-cli)
 - [CLI for Artifactory](https://jfrog.com/help/r/jfrog-cli/cli-for-jfrog-artifactory)
 - [CLI for Security](https://jfrog.com/help/r/jfrog-cli/cli-for-jfrog-security)

@@ -42,8 +42,7 @@ For npm, create three repositories:
 Creates a cache/proxy to npmjs.org:
 
 ```bash
-curl -X PUT "${JFROG_URL}/artifactory/api/repositories/${PROJECT_KEY}-npm-remote" \
-  -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
+jf api "/artifactory/api/repositories/${PROJECT_KEY}-npm-remote" -X PUT \
   -H "Content-Type: application/json" \
   -d '{
     "key": "'${PROJECT_KEY}'-npm-remote",
@@ -60,8 +59,7 @@ curl -X PUT "${JFROG_URL}/artifactory/api/repositories/${PROJECT_KEY}-npm-remote
 Stores your private/internal packages:
 
 ```bash
-curl -X PUT "${JFROG_URL}/artifactory/api/repositories/${PROJECT_KEY}-npm-local" \
-  -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
+jf api "/artifactory/api/repositories/${PROJECT_KEY}-npm-local" -X PUT \
   -H "Content-Type: application/json" \
   -d '{
     "key": "'${PROJECT_KEY}'-npm-local",
@@ -77,8 +75,7 @@ curl -X PUT "${JFROG_URL}/artifactory/api/repositories/${PROJECT_KEY}-npm-local"
 Aggregates local and remote -- developers use this URL:
 
 ```bash
-curl -X PUT "${JFROG_URL}/artifactory/api/repositories/${PROJECT_KEY}-npm" \
-  -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
+jf api "/artifactory/api/repositories/${PROJECT_KEY}-npm" -X PUT \
   -H "Content-Type: application/json" \
   -d '{
     "key": "'${PROJECT_KEY}'-npm",
@@ -193,8 +190,7 @@ npm publish
 After publishing, the package should appear in JFrog:
 
 ```bash
-curl -s -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  "${JFROG_URL}/artifactory/api/npm/${PROJECT_KEY}-npm-local/-/all"
+jf api "/artifactory/api/npm/${PROJECT_KEY}-npm-local/-/all"
 ```
 
 ## Scoped Packages

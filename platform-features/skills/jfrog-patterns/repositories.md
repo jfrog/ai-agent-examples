@@ -1,5 +1,8 @@
 # Repository Setup Patterns
 
+
+> **API transport:** Prefer **`jf api`** (JFrog CLI 2.100.0+). See [jf-api-patterns.md](../../jfrog-cli/jf-api-patterns.md). **`curl`** + `$JFROG_URL` examples are **fallback**.
+
 ## 1. Basic Repository Setup (`repositories-basic-repository-setup`) [SIMPLE]
 
 **Purpose:** Single endpoint to resolve 3rd-party dependencies and deploy 1st-party packages.

@@ -12,12 +12,13 @@ When creating or editing skill files in this repository, follow these convention
 - **YAML frontmatter** at the top with:
   - `name`: Human-readable skill name (e.g. "JFrog Artifactory").
   - `description`: One or two sentences including **trigger keywords** (e.g. "Triggers on mentions of artifactory, repository, artifact, deploy, ...").
-- **Authentication section** near the top that shows the `Authorization: Bearer $JFROG_ACCESS_TOKEN` header. Auth per `skills/jfrog-cli/login-flow.md`: the `jf` CLI is required (auto-installed if missing). (1) Resolve the active environment from `jf config show`, asking the user which env to use if multiple are saved, (2) if no credentials exist, agent-driven web login — asks for JFrog URL, registers a session, shows a login link, polls for token, and saves credentials via `jf config add`.
+- **Authentication section** near the top that states: **primary** auth is **JFrog CLI 2.100.0+** with **`jf config`** and **`jf api <path>`** (no manual `Authorization` header in the happy path). Include the **`Authorization: Bearer $JFROG_ACCESS_TOKEN`** pattern only for **`curl` fallback**. Auth per `skills/jfrog-cli/login-flow.md` and `skills/jfrog-cli/jf-api-patterns.md`: (1) install CLI and verify version, (2) resolve the active environment from `jf config show`, asking the user which env if multiple are saved, (3) **show URLs from `jf config show` and ask the user to confirm** the target platform (one question at a time), (4) run **`jf api /artifactory/api/v1/system/readiness`** after confirmation, (5) if no credentials exist, agent-driven web login — JFrog URL, session, login link, token saved via `jf config add`.
 - **Official Documentation section** at the bottom with 2–5 links to JFrog Help / REST API / CLI docs.
 
 ## API and URL placeholders
 
-- Use the env var `$JFROG_URL` in URL patterns (e.g. `https://$JFROG_URL/artifactory/api/...`) so examples work out of the box once the user sets `JFROG_URL`.
+- **Preferred examples:** `jf api /artifactory/api/...` (path only; credentials from `jf config`). Add **`--server-id`** when multiple servers exist.
+- **Fallback examples:** use `$JFROG_URL` in full URL patterns (e.g. `https://$JFROG_URL/artifactory/api/...`) with `Authorization: Bearer $JFROG_ACCESS_TOKEN` for `curl` when the CLI is unavailable.
 - Do not hardcode specific JFrog hostnames in skill content.
 
 ## Reference files

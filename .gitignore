@@ -4,6 +4,8 @@
 config.txt
 jf-config.export
 *.jfrog-config
+.cursor/
+.vscode/
 
 # User-specific manifests (onboarding-workflows)
 jfrog-manifest*.yaml
@@ -22,5 +24,3 @@ Thumbs.db
 *.swp
 *.swo
 *~
-
-.cursor/plans/

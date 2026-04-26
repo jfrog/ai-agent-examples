@@ -1,5 +1,8 @@
 # Release Lifecycle Patterns
 
+
+> **API transport:** Prefer **`jf api`** (JFrog CLI 2.100.0+). See [jf-api-patterns.md](../../jfrog-cli/jf-api-patterns.md). **`curl`** + `$JFROG_URL` examples are **fallback**.
+
 ## 1. Release Lifecycle Management (without Security Gates) (`release-lifecycle-management-without-security-gates`) [SIMPLE]
 
 **Purpose:** Turn CI outputs into immutable releases and advance them through SDLC stages.

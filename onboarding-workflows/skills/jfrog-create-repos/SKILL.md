@@ -5,6 +5,8 @@ description: Create Artifactory repositories (local, remote, virtual) for npm, M
 
 # JFrog Create Repositories
 
+Prefer **`jf api`** ([../../../platform-features/skills/jfrog-cli/jf-api-patterns.md](../../../platform-features/skills/jfrog-cli/jf-api-patterns.md)) after `jf config`; **`curl`** snippets are **fallback** when the CLI is unavailable.
+
 Creates repositories scoped to a JFrog project. Supports three modes:
 1. **Ecosystem-only** -- auto-generates standard trios (local + remote + virtual) per ecosystem
 2. **Repositories-only** -- creates exactly the repos listed in custom definitions
@@ -159,9 +161,8 @@ fi
 Before creating any repositories, verify the target project exists. If the project does not exist, Artifactory silently ignores the `projectKey` in the repo payload and creates repos that are **not assigned** to any project. This makes them invisible to project-scoped queries (`?project={key}`) and breaks deletion, reconciliation, and other project-aware operations.
 
 ```bash
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v1/projects/$PROJECT_KEY")
+jf api "/access/api/v1/projects/$PROJECT_KEY" >/tmp/jf-cr-proj.json 2>/tmp/jf-cr-proj.code
+HTTP_CODE=$(tr -d '\r\n' < /tmp/jf-cr-proj.code)
 
 if [ "$HTTP_CODE" != "200" ]; then
   echo "ABORT: Project '$PROJECT_KEY' does not exist (HTTP $HTTP_CODE)."
@@ -189,8 +190,7 @@ For each repo in the merged list:
 
 PAYLOAD=$(sed "s/{{PROJECT_KEY}}/$PROJECT_KEY/g; s/{{REPO_KEY}}/$REPO_KEY/g; s/{{XRAY_INDEX}}/$XRAY_INDEX/g" \
   templates/repos/${ECOSYSTEM}-${TYPE}.json)
-curl -sf -X PUT "$JFROG_URL/artifactory/api/repositories/$REPO_KEY" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api "/artifactory/api/repositories/$REPO_KEY" -X PUT \
   -H "Content-Type: application/json" \
   -d "$PAYLOAD"
 ```
@@ -199,8 +199,7 @@ curl -sf -X PUT "$JFROG_URL/artifactory/api/repositories/$REPO_KEY" \
 
 ```bash
 # Build JSON payload inline from manifest fields (see Custom Repository JSON Payload above)
-curl -sf -X PUT "$JFROG_URL/artifactory/api/repositories/$REPO_KEY" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api "/artifactory/api/repositories/$REPO_KEY" -X PUT \
   -H "Content-Type: application/json" \
   -d "$CUSTOM_JSON_PAYLOAD"
 ```
@@ -214,8 +213,7 @@ PAYLOAD=$(sed "s/{{PROJECT_KEY}}/$PROJECT_KEY/g; s/{{REPO_KEY}}/$REPO_KEY/g; s/{
   templates/repos/${ECOSYSTEM}-${TYPE}.json)
 # Merge custom overrides
 PAYLOAD=$(echo "$PAYLOAD" | jq '. + {"description": "Custom desc", "xrayIndex": false}')
-curl -sf -X PUT "$JFROG_URL/artifactory/api/repositories/$REPO_KEY" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api "/artifactory/api/repositories/$REPO_KEY" -X PUT \
   -H "Content-Type: application/json" \
   -d "$PAYLOAD"
 ```
@@ -223,8 +221,7 @@ curl -sf -X PUT "$JFROG_URL/artifactory/api/repositories/$REPO_KEY" \
 ### 2. Verify
 
 ```bash
-curl -sf -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/artifactory/api/repositories/$REPO_KEY" | jq '.key, .type, .packageType'
+jf api "/artifactory/api/repositories/$REPO_KEY" | jq '.key, .type, .packageType'
 ```
 
 ## Template Substitution
@@ -254,10 +251,9 @@ When `xray_enabled` is `true`, after all repositories for a project are created,
 All API calls below follow the **Safe API Call Pattern** (see `jfrog-platform` rule) -- capture HTTP status and body separately, check status before parsing with jq.
 
 ```bash
-HTTP_CODE=$(curl -s -o /tmp/xray-config.json -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "$JFROG_URL/artifactory/api/xrayRepo/getIntegrationConfig")
+jf api /artifactory/api/xrayRepo/getIntegrationConfig \
+  >/tmp/xray-config.json 2>/tmp/xray-config.code
+HTTP_CODE=$(tr -d '\r\n' < /tmp/xray-config.code)
 
 if [ "$HTTP_CODE" = "200" ]; then
   XRAY_AVAILABLE=$(jq -r '.xrayEnabled' /tmp/xray-config.json)
@@ -272,9 +268,7 @@ fi
 If Xray is available, discover the binary manager ID (required for the indexing API):
 
 ```bash
-HTTP_CODE=$(curl -s -o /tmp/xray-binmgr.json -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/xray/api/v1/binMgr")
+HTTP_CODE=$( (jf api "/xray/api/v1/binMgr" >/tmp/xray-binmgr.json 2>/tmp/xray-binmgr.code) ; tr -d '\r\n' < /tmp/xray-binmgr.code )
 
 if [ "$HTTP_CODE" = "200" ]; then
   BIN_MGR_ID=$(jq -r '.[0].bin_mgr_id // "default"' /tmp/xray-binmgr.json)
@@ -296,9 +290,7 @@ Uses the `PUT /xray/api/v1/binMgr/{id}/repos` API ([docs](https://jfrog.com/help
 
 ```bash
 # Step 1: GET the existing indexed repos (safe pattern)
-HTTP_CODE=$(curl -s -o /tmp/xray-current.json -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/xray/api/v1/binMgr/$BIN_MGR_ID/repos")
+HTTP_CODE=$( (jf api "/xray/api/v1/binMgr/$BIN_MGR_ID/repos" >/tmp/xray-current.json 2>/tmp/xray-current.code) ; tr -d '\r\n' < /tmp/xray-current.code )
 
 if [ "$HTTP_CODE" = "200" ]; then
   EXISTING=$(jq '.indexed_repos // []' /tmp/xray-current.json)
@@ -320,11 +312,10 @@ MERGED=$(echo "$EXISTING" "$NEW_REPOS" \
   | jq -s 'add | group_by(.name) | map(.[0])')
 
 # Step 4: PUT the merged list (safe pattern)
-HTTP_CODE=$(curl -s -o /tmp/xray-put-resp.json -w '%{http_code}' \
-  -X PUT "$JFROG_URL/xray/api/v1/binMgr/$BIN_MGR_ID/repos" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "{\"indexed_repos\": $MERGED}")
+echo "{\"indexed_repos\": $MERGED}" >/tmp/xray-merged-create-repos.json
+jf api "/xray/api/v1/binMgr/$BIN_MGR_ID/repos" -X PUT -H "Content-Type: application/json" \
+  --input /tmp/xray-merged-create-repos.json >/tmp/xray-put-resp.json 2>/tmp/xray-put-resp.code
+HTTP_CODE=$(tr -d '\r\n' < /tmp/xray-put-resp.code)
 
 if [ "$HTTP_CODE" = "200" ]; then
   echo "OK: Xray index updated"
@@ -349,9 +340,8 @@ When `curation_enabled` is `true`, after all repositories for a project are crea
 ### Check Curation Availability
 
 ```bash
-CURATION_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/curation/api/v1/system/status")
+jf api /curation/api/v1/system/status >/dev/null 2>/tmp/curation-status.code
+CURATION_STATUS=$(tr -d '\r\n' < /tmp/curation-status.code)
 ```
 
 - HTTP 200 -- Curation is available
@@ -367,8 +357,7 @@ If Curation is available, enable it on each newly created **remote** repository 
 ```bash
 # For each remote repo (ecosystem-generated or custom):
 REPO_KEY="${REMOTE_REPO_KEY}"
-curl -sf -X PUT "$JFROG_URL/curation/api/v1/repos/${REPO_KEY}" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
+jf api "/curation/api/v1/repos/${REPO_KEY}" -X PUT \
   -H "Content-Type: application/json" \
   -d '{"curated": true}'
 ```

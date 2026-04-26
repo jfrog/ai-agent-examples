@@ -1,59 +1,49 @@
 # JFrog REST API Reference
 
-This document provides curl examples for all JFrog REST API calls used in the onboarding workflow.
-Always use `curl` for REST API calls; do not use Python or other HTTP clients.
+Examples for JFrog REST API calls used in the onboarding workflow.
 
-## Required Tools
+**Preferred:** **`jf api <path>`** (JFrog CLI **2.100.0+**, credentials from `jf config`). See [../../../platform-features/skills/jfrog-cli/jf-api-patterns.md](../../../platform-features/skills/jfrog-cli/jf-api-patterns.md).
 
-Before running API calls, verify these tools are installed:
+**Fallback:** `curl` with `Authorization: Bearer ${JFROG_ACCESS_TOKEN}` and full `"${JFROG_URL}/..."` URLs when the CLI is unavailable. Do not use Python or other HTTP clients for these examples.
+
+## Required tools
 
 ```bash
-# Check required tools
-for tool in curl jq; do
-  if ! command -v $tool &> /dev/null; then
-    echo "ERROR: $tool is not installed"
-    case $tool in
-      curl) echo "  Install: brew install curl (macOS) or apt-get install curl (Linux)" ;;
-      jq)   echo "  Install: brew install jq (macOS) or apt-get install jq (Linux)" ;;
-    esac
-  fi
-done
+for tool in jf curl jq; do command -v $tool >/dev/null 2>&1 && echo OK:$tool || echo MISSING:$tool; done
 ```
 
 ## Prerequisites
 
-Load credentials from `.env` before making API calls:
+Complete [login-flow.md](../../../platform-features/skills/jfrog-cli/login-flow.md) (confirm platform URL, then readiness). For **`curl`** fallback only:
 
 ```bash
-# Load .env if vars are not already set
 if [ -z "$JFROG_URL" ] || [ -z "$JFROG_ACCESS_TOKEN" ]; then
   if [ -f .env ]; then set -a; source .env; set +a; fi
 fi
 ```
 
-## Health & Validation
+## Health and validation
 
-### System Readiness (Unauthenticated)
-
-Check if the JFrog Platform is accessible:
+### System readiness
 
 ```bash
-curl -s "${JFROG_URL}/artifactory/api/v1/system/readiness"
+jf api /artifactory/api/v1/system/readiness
 ```
+
+**Fallback:** `curl -s "${JFROG_URL}/artifactory/api/v1/system/readiness"`
 
 **Response** (HTTP 200):
 ```json
 {"status": "OK"}
 ```
 
-### Validate Token (Authenticated)
-
-Verify the token is valid:
+### Validate token (authenticated)
 
 ```bash
-curl -s -f -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  "${JFROG_URL}/artifactory/api/system/version"
+jf api /artifactory/api/system/version
 ```
+
+**Fallback:** `curl -s -f -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" "${JFROG_URL}/artifactory/api/system/version"`
 
 **Response** (HTTP 200):
 ```json
@@ -64,15 +54,16 @@ curl -s -f -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
 }
 ```
 
-### Validate Platform Admin Privileges
-
-After verifying the token is valid, check if it has **platform admin** privileges:
+### Validate platform admin privileges
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}" \
-  -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  "${JFROG_URL}/access/api/v1/config/security/authentication/basic_authentication_enabled"
+BODY=/tmp/jf-api-admin.json
+CODE=/tmp/jf-api-admin.code
+jf api /access/api/v1/config/security/authentication/basic_authentication_enabled >"$BODY" 2>"$CODE"
+tr -d '\r\n' < "$CODE"   # HTTP status
 ```
+
+**Fallback:** `curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" "${JFROG_URL}/access/api/v1/config/security/authentication/basic_authentication_enabled"`
 
 **Response codes:**
 - `200` = Token has platform admin privileges
@@ -81,9 +72,13 @@ curl -s -o /dev/null -w "%{http_code}" \
 
 **Note:** This endpoint requires platform admin access. If the token returns 401 or 403, it cannot be used for creating projects and repositories.
 
-### Check Subscription/License Type
+### Check subscription/license type
 
-Check the JFrog subscription type to determine available features:
+```bash
+jf api /artifactory/api/system/license
+```
+
+**Fallback:**
 
 ```bash
 curl -s -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
@@ -108,8 +103,10 @@ curl -s -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
 
 **Check for OIDC-compatible subscription:**
 ```bash
-SUBSCRIPTION_TYPE=$(curl -s -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  "${JFROG_URL}/artifactory/api/system/license" | jq -r '.subscriptionType')
+LIC=/tmp/jf-api-ref-license.json
+LICC=/tmp/jf-api-ref-license.code
+jf api /artifactory/api/system/license >"$LIC" 2>"$LICC"
+SUBSCRIPTION_TYPE=$(jq -r '.subscriptionType' "$LIC")
 
 if [[ "$SUBSCRIPTION_TYPE" == enterprise_xray* ]] || [[ "$SUBSCRIPTION_TYPE" == enterprise_plus* ]]; then
   echo "${SUBSCRIPTION_TYPE} subscription - OIDC available"
@@ -119,6 +116,8 @@ fi
 ```
 
 ## Projects
+
+For each **`curl`** example in this file, the **`jf api`** equivalent uses the **path only** (everything after `JFROG_URL` host), same `-X`, `-H`, and `-d` / `--input`. Example: `curl -X POST "${JFROG_URL}/access/api/v1/projects" ...` → `jf api /access/api/v1/projects -X POST ...`.
 
 ### Create Project
 
@@ -392,13 +391,15 @@ fi
 
 ## Complete Onboarding Script Example
 
-Here's a complete example creating all resources for an npm project:
+Here's a complete example creating all resources for an npm project.
+
+**Preferred:** use **`jf api`** after `jf config` (same paths as below without `"${JFROG_URL}"`).
 
 ```bash
 #!/bin/bash
 set -e
 
-# Load credentials from .env
+# Prefer: jf config + jf api. Fallback: .env + curl
 if [ -z "$JFROG_URL" ] || [ -z "$JFROG_ACCESS_TOKEN" ]; then
   if [ -f .env ]; then set -a; source .env; set +a; fi
 fi
@@ -407,30 +408,23 @@ PROJECT_KEY="myapp"
 
 # 1. Create project
 echo "Creating project..."
-curl -X POST "${JFROG_URL}/access/api/v1/projects" \
-  -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  -H "Content-Type: application/json" \
+jf api /access/api/v1/projects -X POST -H "Content-Type: application/json" \
   -d "{\"project_key\": \"${PROJECT_KEY}\", \"display_name\": \"My App\"}"
+# Fallback: curl -X POST "${JFROG_URL}/access/api/v1/projects" -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" ...
 
 # 2. Create remote repository
 echo "Creating remote repository..."
-curl -X PUT "${JFROG_URL}/artifactory/api/repositories/${PROJECT_KEY}-npm-remote" \
-  -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  -H "Content-Type: application/json" \
+jf api "/artifactory/api/repositories/${PROJECT_KEY}-npm-remote" -X PUT -H "Content-Type: application/json" \
   -d "{\"key\": \"${PROJECT_KEY}-npm-remote\", \"rclass\": \"remote\", \"packageType\": \"npm\", \"url\": \"https://registry.npmjs.org\", \"projectKey\": \"${PROJECT_KEY}\"}"
 
 # 3. Create local repository
 echo "Creating local repository..."
-curl -X PUT "${JFROG_URL}/artifactory/api/repositories/${PROJECT_KEY}-npm-local" \
-  -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  -H "Content-Type: application/json" \
+jf api "/artifactory/api/repositories/${PROJECT_KEY}-npm-local" -X PUT -H "Content-Type: application/json" \
   -d "{\"key\": \"${PROJECT_KEY}-npm-local\", \"rclass\": \"local\", \"packageType\": \"npm\", \"projectKey\": \"${PROJECT_KEY}\"}"
 
 # 4. Create virtual repository
 echo "Creating virtual repository..."
-curl -X PUT "${JFROG_URL}/artifactory/api/repositories/${PROJECT_KEY}-npm" \
-  -H "Authorization: Bearer ${JFROG_ACCESS_TOKEN}" \
-  -H "Content-Type: application/json" \
+jf api "/artifactory/api/repositories/${PROJECT_KEY}-npm" -X PUT -H "Content-Type: application/json" \
   -d "{\"key\": \"${PROJECT_KEY}-npm\", \"rclass\": \"virtual\", \"packageType\": \"npm\", \"repositories\": [\"${PROJECT_KEY}-npm-local\", \"${PROJECT_KEY}-npm-remote\"], \"defaultDeploymentRepo\": \"${PROJECT_KEY}-npm-local\", \"projectKey\": \"${PROJECT_KEY}\"}"
 
 echo "Done!"

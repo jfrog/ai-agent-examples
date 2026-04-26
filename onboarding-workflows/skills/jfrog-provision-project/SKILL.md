@@ -7,6 +7,8 @@ description: Provision a new project on the JFrog Platform via REST API. Use whe
 
 Creates a project on the JFrog Platform. Projects are the top-level organizational unit that groups repositories, builds, and members.
 
+Prefer **`jf api`** ([../../../platform-features/skills/jfrog-cli/jf-api-patterns.md](../../../platform-features/skills/jfrog-cli/jf-api-patterns.md)); **`curl`** below is fallback.
+
 ## Inputs
 
 - `project_key` -- 3-32 chars, lowercase letters and digits only, must start with a letter
@@ -36,9 +38,10 @@ echo "$PROJECT_KEY" | grep -qE '^[a-z][a-z0-9]{2,31}$' || echo "ERROR: Invalid p
 ### 2. Check if project already exists
 
 ```bash
-STATUS=$(curl -s -o /dev/null -w '%{http_code}' \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v1/projects/$PROJECT_KEY")
+SC=/tmp/jf-proj-exists.code
+SB=/tmp/jf-proj-exists.json
+jf api "/access/api/v1/projects/$PROJECT_KEY" >"$SB" 2>"$SC"
+STATUS=$(tr -d '\r\n' < "$SC")
 
 if [ "$STATUS" = "200" ]; then
   echo "Project '$PROJECT_KEY' already exists. Skipping creation."
@@ -49,9 +52,7 @@ fi
 ### 3. Create the project
 
 ```bash
-curl -sf -X POST "$JFROG_URL/access/api/v1/projects" \
-  -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
+jf api /access/api/v1/projects -X POST -H "Content-Type: application/json" \
   -d '{
     "project_key": "'"$PROJECT_KEY"'",
     "display_name": "'"$DISPLAY_NAME"'",
@@ -64,14 +65,17 @@ curl -sf -X POST "$JFROG_URL/access/api/v1/projects" \
   }'
 ```
 
-Expected response: HTTP 201 with the created project JSON.
+Expected response: HTTP **201** on stderr; body on stdout.
+
+**Fallback:** `curl -sf -X POST "$JFROG_URL/access/api/v1/projects" -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" -H "Content-Type: application/json" -d '...'`
 
 ### 4. Verify creation
 
 ```bash
-curl -sf -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" \
-  "$JFROG_URL/access/api/v1/projects/$PROJECT_KEY" | jq .
+jf api "/access/api/v1/projects/$PROJECT_KEY" | jq .
 ```
+
+**Fallback:** `curl -sf -H "Authorization: Bearer $JFROG_ACCESS_TOKEN" "$JFROG_URL/access/api/v1/projects/$PROJECT_KEY" | jq .`
 
 ## Error Handling
 
