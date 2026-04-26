@@ -81,9 +81,9 @@ The `assets/` directory contains reference files:
 
 | Resource | Endpoint | Docs |
 |---|---|---|
-| Templates | `/unifiedpolicy/api/v1/templates` | [Templates API](https://jfrog.com/help/r/jfrog-rest-apis/templates) |
-| Rules | `/unifiedpolicy/api/v1/rules` | [Rules API](https://jfrog.com/help/r/jfrog-rest-apis/rules) |
-| Policies | `/unifiedpolicy/api/v1/policies` | [Policies API](https://jfrog.com/help/r/jfrog-rest-apis/lifecycle-policies) |
+| Templates | `/unifiedpolicy/api/v1/templates` | [Templates API](https://docs.jfrog.com/releases/docs/deprecations-in-process) |
+| Rules | `/unifiedpolicy/api/v1/rules` | [Rules API](https://docs.jfrog.com/governance/reference/ruleslist) |
+| Policies | `/unifiedpolicy/api/v1/policies` | [Policies API](https://docs.jfrog.com/governance/reference/policieslist) |
 
 ## Naming Conventions
 

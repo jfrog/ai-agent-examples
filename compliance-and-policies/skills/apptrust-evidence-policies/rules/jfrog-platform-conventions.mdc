@@ -10,6 +10,25 @@ alwaysApply: false
 - Prefer using existing templates, rules and policies
 - Create policies in this order: template, rules, then policy.
 
-Templates reference: https://jfrog.com/help/r/jfrog-rest-apis/templates
-Rules reference: https://jfrog.com/help/r/jfrog-rest-apis/rules
-Policies reference: https://jfrog.com/help/r/jfrog-rest-apis/lifecycle-policies
+# Help Documentation references
+Templates references: 
+[list templates](https://docs.jfrog.com/governance/reference/templateslist)
+[get tempalte](https://docs.jfrog.com/governance/reference/templatesget)
+[create template](https://docs.jfrog.com/governance/reference/templatescreate)
+[update template](https://docs.jfrog.com/governance/reference/templatesupdate)
+[delete template](https://docs.jfrog.com/governance/reference/templatesdelete)
+
+Rules references: 
+[list rules](https://docs.jfrog.com/governance/reference/ruleslist)
+[get rule](https://docs.jfrog.com/governance/reference/rulesget)
+[create rule](https://docs.jfrog.com/governance/reference/rulescreate)
+[update rule](https://docs.jfrog.com/governance/reference/ruleupdate)
+[delete rule](https://docs.jfrog.com/governance/reference/ruledelete)
+
+Policies references: 
+[list policies](https://docs.jfrog.com/governance/reference/policieslist)
+[create policy](https://docs.jfrog.com/governance/reference/policiescreate)
+[get policy](https://docs.jfrog.com/governance/reference/policiesget)
+[update policy](https://docs.jfrog.com/governance/reference/policiesupdate)
+[delete policy](https://docs.jfrog.com/governance/reference/policiesdelete)
+
