@@ -1,760 +1,1195 @@
-{"params": {
-    "predicateType": "https://slsa.dev/provenance/v1"
-  },
-"data": {
-                "fromBuilds": null,
-                "evidenceConnection": {
-                    "edges": [
+{
+    "data": {
+      "applications": {
+        "getApplicationVersion": {
+          "evidenceSubject": {
+            "evidenceConnection": {
+              "edges": [
+                {
+                  "node": {
+                    "createdAt": "2026-02-12T06:41:07.626Z",
+                    "evidenceId": "ffbc8f456ba1ff57d5235c03a49a514b651643448b34c79ad3d16290a1762405",
+                    "predicate": {
+                      "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+                      "bomFormat": "CycloneDX",
+                      "components": [
                         {
-                            "node": {
-                                "predicate": {
-                                    "target": {
-                                        "environment": "DEV",
-                                        "excludedRepositoryKeys": [],
-                                        "includedRepositoryKeys": [
-                                            "python-local",
-                                            "docker-local"
-                                        ]
-                                    },
-                                    "baseUrl": "https://my.jfrog.io",
-                                    "mutable": false,
-                                    "createdBy": "token:a@jfrog.com",
-                                    "serviceId": "jfrt@01kdqzsneb6ayb1v85sw231ees",
-                                    "timestamp": "2026-02-09T08:12:53.008Z"
+                          "bom-ref": "pkg:alpine/alpine/alpine-baselayout@3.4.3-r1",
+                          "licenses": [
+                            {
+                              "license": {
+                                "id": "GPL-2.0-only",
+                                "text": {
+                                  "content": "xxx",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
                                 },
-                                "predicateSlug": "promotion",
-                                "predicateType": "https://jfrog.com/evidence/promotion/v1",
-                                "predicateCategory": "Workflow"
+                                "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html"
+                              }
                             }
+                          ],
+                          "name": "alpine-baselayout",
+                          "properties": [
+                            {
+                              "name": "bsi:component:executable",
+                              "value": "executable"
+                            },
+                            {
+                              "name": "bsi:component:archive",
+                              "value": "archive"
+                            },
+                            {
+                              "name": "bsi:component:structured",
+                              "value": "structured"
+                            }
+                          ],
+                          "purl": "pkg:alpine/alpine/alpine-baselayout@3.4.3-r1",
+                          "type": "library",
+                          "version": "3.4.3-r1"
                         },
                         {
-                            "node": {
-                                "predicate": {
-                                    "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
-                                    "version": 1,
-                                    "metadata": {
-                                        "tools": [
-                                            {
-                                                "name": "Xray",
-                                                "vendor": "JFrog Inc.",
-                                                "version": "3.138.2"
-                                            }
-                                        ],
-                                        "component": {
-                                            "name": "[application-versions]/test1",
-                                            "purl": "pkg:appVersion/%5Bapplication-versions%5D%2Ftest1@1.0.2",
-                                            "type": "application",
-                                            "version": "1.0.2"
-                                        },
-                                        "timestamp": "2026-02-09T08:13:08Z"
-                                    },
-                                    "bomFormat": "CycloneDX",
-                                    "components": [
-                                        {
-                                            "name": "alpine-baselayout",
-                                            "purl": "pkg:alpine/alpine/alpine-baselayout@3.4.3-r1",
-                                            "type": "library",
-                                            "bom-ref": "pkg:alpine/alpine/alpine-baselayout@3.4.3-r1",
-                                            "version": "3.4.3-r1",
-                                            "licenses": [
-                                                {
-                                                    "license": {
-                                                        "id": "GPL-2.0-only",
-                                                        "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html",
-                                                        "text": {
-                                                            "content": "",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "properties": [
-                                                {
-                                                    "name": "bsi:component:executable",
-                                                    "value": "executable"
-                                                },
-                                                {
-                                                    "name": "bsi:component:archive",
-                                                    "value": "archive"
-                                                },
-                                                {
-                                                    "name": "bsi:component:structured",
-                                                    "value": "structured"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name": "alpine-baselayout-data",
-                                            "purl": "pkg:alpine/alpine/alpine-baselayout-data@3.4.3-r1",
-                                            "type": "library",
-                                            "bom-ref": "pkg:alpine/alpine/alpine-baselayout-data@3.4.3-r1",
-                                            "version": "3.4.3-r1",
-                                            "licenses": [
-                                                {
-                                                    "license": {
-                                                        "id": "GPL-2.0-only",
-                                                        "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "properties": [
-                                                {
-                                                    "name": "bsi:component:executable",
-                                                    "value": "executable"
-                                                },
-                                                {
-                                                    "name": "bsi:component:archive",
-                                                    "value": "archive"
-                                                },
-                                                {
-                                                    "name": "bsi:component:structured",
-                                                    "value": "structured"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name": "alpine-keys",
-                                            "purl": "pkg:alpine/alpine/alpine-keys@2.4-r1",
-                                            "type": "library",
-                                            "bom-ref": "pkg:alpine/alpine/alpine-keys@2.4-r1",
-                                            "version": "2.4-r1",
-                                            "licenses": [
-                                                {
-                                                    "license": {
-                                                        "id": "MIT",
-                                                        "url": "http://www.opensource.org/licenses/MIT",
-                                                        "text": {
-                                                            "content": "hash",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "properties": [
-                                                {
-                                                    "name": "bsi:component:executable",
-                                                    "value": "executable"
-                                                },
-                                                {
-                                                    "name": "bsi:component:archive",
-                                                    "value": "archive"
-                                                },
-                                                {
-                                                    "name": "bsi:component:structured",
-                                                    "value": "structured"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name": "apk-tools",
-                                            "purl": "pkg:alpine/alpine/apk-tools@2.14.0-r2",
-                                            "type": "library",
-                                            "bom-ref": "pkg:alpine/alpine/apk-tools@2.14.0-r2",
-                                            "version": "2.14.0-r2",
-                                            "licenses": [
-                                                {
-                                                    "license": {
-                                                        "id": "GPL-2.0-only",
-                                                        "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "properties": [
-                                                {
-                                                    "name": "bsi:component:executable",
-                                                    "value": "executable"
-                                                },
-                                                {
-                                                    "name": "bsi:component:archive",
-                                                    "value": "archive"
-                                                },
-                                                {
-                                                    "name": "bsi:component:structured",
-                                                    "value": "structured"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name": "busybox",
-                                            "purl": "pkg:alpine/alpine/busybox@1.36.1-r5",
-                                            "type": "library",
-                                            "bom-ref": "pkg:alpine/alpine/busybox@1.36.1-r5",
-                                            "version": "1.36.1-r5",
-                                            "licenses": [
-                                                {
-                                                    "license": {
-                                                        "id": "GPL-2.0-only",
-                                                        "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "properties": [
-                                                {
-                                                    "name": "bsi:component:executable",
-                                                    "value": "executable"
-                                                },
-                                                {
-                                                    "name": "bsi:component:archive",
-                                                    "value": "archive"
-                                                },
-                                                {
-                                                    "name": "bsi:component:structured",
-                                                    "value": "structured"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name": "busybox-binsh",
-                                            "purl": "pkg:alpine/alpine/busybox-binsh@1.36.1-r5",
-                                            "type": "library",
-                                            "bom-ref": "pkg:alpine/alpine/busybox-binsh@1.36.1-r5",
-                                            "version": "1.36.1-r5",
-                                            "licenses": [
-                                                {
-                                                    "license": {
-                                                        "id": "GPL-2.0-only",
-                                                        "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "properties": [
-                                                {
-                                                    "name": "bsi:component:executable",
-                                                    "value": "executable"
-                                                },
-                                                {
-                                                    "name": "bsi:component:archive",
-                                                    "value": "archive"
-                                                },
-                                                {
-                                                    "name": "bsi:component:structured",
-                                                    "value": "structured"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name": "ca-certificates-bundle",
-                                            "purl": "pkg:alpine/alpine/ca-certificates-bundle@20230506-r0",
-                                            "type": "library",
-                                            "bom-ref": "pkg:alpine/alpine/ca-certificates-bundle@20230506-r0",
-                                            "version": "20230506-r0",
-                                            "licenses": [
-                                                {
-                                                    "license": {
-                                                        "id": "MIT",
-                                                        "url": "http://www.opensource.org/licenses/MIT",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                },
-                                                {
-                                                    "license": {
-                                                        "id": "MPL-2.0",
-                                                        "url": "http://opensource.org/licenses/MPL-2.0",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "properties": [
-                                                {
-                                                    "name": "bsi:component:executable",
-                                                    "value": "executable"
-                                                },
-                                                {
-                                                    "name": "bsi:component:archive",
-                                                    "value": "archive"
-                                                },
-                                                {
-                                                    "name": "bsi:component:structured",
-                                                    "value": "structured"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name": "test1",
-                                            "purl": "pkg:appversion/test1@1.0.2",
-                                            "type": "application",
-                                            "bom-ref": "pkg:appversion/test1@1.0.2",
-                                            "version": "1.0.2",
-                                            "licenses": []
-                                        },
-                                        {
-                                            "name": "github-jfrog-testing:sha256",
-                                            "purl": "pkg:docker/github-jfrog-testing%3Asha256@e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7",
-                                            "type": "container",
-                                            "hashes": [
-                                                {
-                                                    "alg": "SHA-256",
-                                                    "content": "e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7"
-                                                }
-                                            ],
-                                            "bom-ref": "pkg:docker/github-jfrog-testing%3Asha256@e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7",
-                                            "version": "e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7",
-                                            "licenses": []
-                                        },
-                                        {
-                                            "name": "github-jfrog-testing:sha256",
-                                            "purl": "pkg:docker/github-jfrog-testing%3Asha256@9f8211a40dfac115e81dd0c68baa1262adc2c02378ed35bfa9b4476c9694b0ff",
-                                            "type": "container",
-                                            "hashes": [
-                                                {
-                                                    "alg": "SHA-256",
-                                                    "content": "9f8211a40dfac115e81dd0c68baa1262adc2c02378ed35bfa9b4476c9694b0ff"
-                                                }
-                                            ],
-                                            "bom-ref": "pkg:docker/github-jfrog-testing%3Asha256@9f8211a40dfac115e81dd0c68baa1262adc2c02378ed35bfa9b4476c9694b0ff",
-                                            "version": "9f8211a40dfac115e81dd0c68baa1262adc2c02378ed35bfa9b4476c9694b0ff",
-                                            "licenses": []
-                                        },
-                                        {
-                                            "name": "github-jfrog-testing:sha256",
-                                            "purl": "pkg:docker/github-jfrog-testing%3Asha256@821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5",
-                                            "type": "container",
-                                            "hashes": [
-                                                {
-                                                    "alg": "SHA-256",
-                                                    "content": "821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5"
-                                                }
-                                            ],
-                                            "bom-ref": "pkg:docker/github-jfrog-testing%3Asha256@821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5",
-                                            "version": "821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5",
-                                            "licenses": []
-                                        },
-                                        {
-                                            "name": "github-jfrog-testing:sha256",
-                                            "purl": "pkg:docker/github-jfrog-testing%3Asha256@170172070237944efd20eb50ae7a19b7042ed87bf75f9823922b8326d471eb61",
-                                            "type": "container",
-                                            "hashes": [
-                                                {
-                                                    "alg": "SHA-256",
-                                                    "content": "170172070237944efd20eb50ae7a19b7042ed87bf75f9823922b8326d471eb61"
-                                                }
-                                            ],
-                                            "bom-ref": "pkg:docker/github-jfrog-testing%3Asha256@170172070237944efd20eb50ae7a19b7042ed87bf75f9823922b8326d471eb61",
-                                            "version": "170172070237944efd20eb50ae7a19b7042ed87bf75f9823922b8326d471eb61",
-                                            "licenses": []
-                                        },
-                                        {
-                                            "name": "jfrog-python-example",
-                                            "purl": "pkg:pypi/jfrog-python-example@1.10",
-                                            "type": "application",
-                                            "hashes": [
-                                                {
-                                                    "alg": "SHA-256",
-                                                    "content": "b0ad4d61db24fde23cbbd99a345bdd3614239f6b66c184b801e0906d037617f1"
-                                                }
-                                            ],
-                                            "bom-ref": "pkg:pypi/jfrog-python-example@1.10",
-                                            "version": "1.10",
-                                            "licenses": []
-                                        },
-                                        {
-                                            "name": "libc-utils",
-                                            "purl": "pkg:alpine/alpine/libc-utils@0.7.2-r5",
-                                            "type": "library",
-                                            "bom-ref": "pkg:alpine/alpine/libc-utils@0.7.2-r5",
-                                            "version": "0.7.2-r5",
-                                            "licenses": [
-                                                {
-                                                    "license": {
-                                                        "id": "BSD-2-Clause",
-                                                        "url": "http://opensource.org/licenses/BSD-2-Clause",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                },
-                                                {
-                                                    "license": {
-                                                        "id": "BSD-3-Clause",
-                                                        "url": "http://opensource.org/licenses/BSD-3-Clause",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "properties": [
-                                                {
-                                                    "name": "bsi:component:executable",
-                                                    "value": "executable"
-                                                },
-                                                {
-                                                    "name": "bsi:component:archive",
-                                                    "value": "archive"
-                                                },
-                                                {
-                                                    "name": "bsi:component:structured",
-                                                    "value": "structured"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name": "libcrypto3",
-                                            "purl": "pkg:alpine/alpine/libcrypto3@3.1.4-r5",
-                                            "type": "library",
-                                            "bom-ref": "pkg:alpine/alpine/libcrypto3@3.1.4-r5",
-                                            "version": "3.1.4-r5",
-                                            "licenses": [
-                                                {
-                                                    "license": {
-                                                        "id": "Apache-2.0",
-                                                        "url": "http://licenses.nuget.org/Apache-2.0",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "properties": [
-                                                {
-                                                    "name": "bsi:component:executable",
-                                                    "value": "executable"
-                                                },
-                                                {
-                                                    "name": "bsi:component:archive",
-                                                    "value": "archive"
-                                                },
-                                                {
-                                                    "name": "bsi:component:structured",
-                                                    "value": "structured"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name": "libssl3",
-                                            "purl": "pkg:alpine/alpine/libssl3@3.1.4-r5",
-                                            "type": "library",
-                                            "bom-ref": "pkg:alpine/alpine/libssl3@3.1.4-r5",
-                                            "version": "3.1.4-r5",
-                                            "licenses": [
-                                                {
-                                                    "license": {
-                                                        "id": "Apache-2.0",
-                                                        "url": "http://licenses.nuget.org/Apache-2.0",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "properties": [
-                                                {
-                                                    "name": "bsi:component:executable",
-                                                    "value": "executable"
-                                                },
-                                                {
-                                                    "name": "bsi:component:archive",
-                                                    "value": "archive"
-                                                },
-                                                {
-                                                    "name": "bsi:component:structured",
-                                                    "value": "structured"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name": "musl",
-                                            "purl": "pkg:alpine/alpine/musl@1.2.4-r2",
-                                            "type": "library",
-                                            "bom-ref": "pkg:alpine/alpine/musl@1.2.4-r2",
-                                            "version": "1.2.4-r2",
-                                            "licenses": [
-                                                {
-                                                    "license": {
-                                                        "id": "MIT",
-                                                        "url": "http://www.opensource.org/licenses/MIT",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "properties": [
-                                                {
-                                                    "name": "bsi:component:executable",
-                                                    "value": "executable"
-                                                },
-                                                {
-                                                    "name": "bsi:component:archive",
-                                                    "value": "archive"
-                                                },
-                                                {
-                                                    "name": "bsi:component:structured",
-                                                    "value": "structured"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name": "musl-utils",
-                                            "purl": "pkg:alpine/alpine/musl-utils@1.2.4-r2",
-                                            "type": "library",
-                                            "bom-ref": "pkg:alpine/alpine/musl-utils@1.2.4-r2",
-                                            "version": "1.2.4-r2",
-                                            "licenses": [
-                                                {
-                                                    "license": {
-                                                        "id": "BSD-2-Clause",
-                                                        "url": "http://opensource.org/licenses/BSD-2-Clause",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                },
-                                                {
-                                                    "license": {
-                                                        "id": "GPL-2.0-or-later",
-                                                        "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                },
-                                                {
-                                                    "license": {
-                                                        "id": "MIT",
-                                                        "url": "http://www.opensource.org/licenses/MIT",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "properties": [
-                                                {
-                                                    "name": "bsi:component:executable",
-                                                    "value": "executable"
-                                                },
-                                                {
-                                                    "name": "bsi:component:archive",
-                                                    "value": "archive"
-                                                },
-                                                {
-                                                    "name": "bsi:component:structured",
-                                                    "value": "structured"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name": "scanelf",
-                                            "purl": "pkg:alpine/alpine/scanelf@1.3.7-r1",
-                                            "type": "library",
-                                            "bom-ref": "pkg:alpine/alpine/scanelf@1.3.7-r1",
-                                            "version": "1.3.7-r1",
-                                            "licenses": [
-                                                {
-                                                    "license": {
-                                                        "id": "GPL-2.0-only",
-                                                        "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "properties": [
-                                                {
-                                                    "name": "bsi:component:executable",
-                                                    "value": "executable"
-                                                },
-                                                {
-                                                    "name": "bsi:component:archive",
-                                                    "value": "archive"
-                                                },
-                                                {
-                                                    "name": "bsi:component:structured",
-                                                    "value": "structured"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name": "ssl_client",
-                                            "purl": "pkg:alpine/alpine/ssl_client@1.36.1-r5",
-                                            "type": "library",
-                                            "bom-ref": "pkg:alpine/alpine/ssl_client@1.36.1-r5",
-                                            "version": "1.36.1-r5",
-                                            "licenses": [
-                                                {
-                                                    "license": {
-                                                        "id": "GPL-2.0-only",
-                                                        "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "properties": [
-                                                {
-                                                    "name": "bsi:component:executable",
-                                                    "value": "executable"
-                                                },
-                                                {
-                                                    "name": "bsi:component:archive",
-                                                    "value": "archive"
-                                                },
-                                                {
-                                                    "name": "bsi:component:structured",
-                                                    "value": "structured"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name": "zlib",
-                                            "purl": "pkg:alpine/alpine/zlib@1.2.13-r1",
-                                            "type": "library",
-                                            "bom-ref": "pkg:alpine/alpine/zlib@1.2.13-r1",
-                                            "version": "1.2.13-r1",
-                                            "licenses": [
-                                                {
-                                                    "license": {
-                                                        "id": "Zlib",
-                                                        "url": "http://www.opensource.org/licenses/Zlib",
-                                                        "text": {
-                                                            "content": "<hash>",
-                                                            "encoding": "base64",
-                                                            "contentType": "text/plain"
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "properties": [
-                                                {
-                                                    "name": "bsi:component:executable",
-                                                    "value": "executable"
-                                                },
-                                                {
-                                                    "name": "bsi:component:archive",
-                                                    "value": "archive"
-                                                },
-                                                {
-                                                    "name": "bsi:component:structured",
-                                                    "value": "structured"
-                                                }
-                                            ]
-                                        }
-                                    ],
-                                    "specVersion": "1.6",
-                                    "dependencies": [],
-                                    "serialNumber": "urn:uuid:b3602483-f4d1-45e6-ad95-4f7442539305"
+                          "bom-ref": "pkg:alpine/alpine/alpine-baselayout-data@3.4.3-r1",
+                          "licenses": [
+                            {
+                              "license": {
+                                "id": "GPL-2.0-only",
+                                "text": {
+                                  "content": "xxx",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
                                 },
-                                "predicateSlug": "cyclonedx-sbom",
-                                "predicateType": "https://jfrog.com/evidence/cyclonedx/sbom/v1.6",
-                                "predicateCategory": "Custom"
+                                "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html"
+                              }
                             }
+                          ],
+                          "name": "alpine-baselayout-data",
+                          "properties": [
+                            {
+                              "name": "bsi:component:executable",
+                              "value": "executable"
+                            },
+                            {
+                              "name": "bsi:component:archive",
+                              "value": "archive"
+                            },
+                            {
+                              "name": "bsi:component:structured",
+                              "value": "structured"
+                            }
+                          ],
+                          "purl": "pkg:alpine/alpine/alpine-baselayout-data@3.4.3-r1",
+                          "type": "library",
+                          "version": "3.4.3-r1"
+                        },
+                        {
+                          "bom-ref": "pkg:alpine/alpine/alpine-keys@2.4-r1",
+                          "licenses": [
+                            {
+                              "license": {
+                                "id": "MIT",
+                                "text": {
+                                  "content": "x+xxx==",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://www.opensource.org/licenses/MIT"
+                              }
+                            }
+                          ],
+                          "name": "alpine-keys",
+                          "properties": [
+                            {
+                              "name": "bsi:component:executable",
+                              "value": "executable"
+                            },
+                            {
+                              "name": "bsi:component:archive",
+                              "value": "archive"
+                            },
+                            {
+                              "name": "bsi:component:structured",
+                              "value": "structured"
+                            }
+                          ],
+                          "purl": "pkg:alpine/alpine/alpine-keys@2.4-r1",
+                          "type": "library",
+                          "version": "2.4-r1"
+                        },
+                        {
+                          "bom-ref": "pkg:alpine/alpine/apk-tools@2.14.0-r2",
+                          "licenses": [
+                            {
+                              "license": {
+                                "id": "GPL-2.0-only",
+                                "text": {
+                                  "content": "xxx",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html"
+                              }
+                            }
+                          ],
+                          "name": "apk-tools",
+                          "properties": [
+                            {
+                              "name": "bsi:component:executable",
+                              "value": "executable"
+                            },
+                            {
+                              "name": "bsi:component:archive",
+                              "value": "archive"
+                            },
+                            {
+                              "name": "bsi:component:structured",
+                              "value": "structured"
+                            }
+                          ],
+                          "purl": "pkg:alpine/alpine/apk-tools@2.14.0-r2",
+                          "type": "library",
+                          "version": "2.14.0-r2"
+                        },
+                        {
+                          "bom-ref": "pkg:alpine/alpine/busybox@1.36.1-r5",
+                          "licenses": [
+                            {
+                              "license": {
+                                "id": "GPL-2.0-only",
+                                "text": {
+                                  "content": "xxx",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html"
+                              }
+                            }
+                          ],
+                          "name": "busybox",
+                          "properties": [
+                            {
+                              "name": "bsi:component:executable",
+                              "value": "executable"
+                            },
+                            {
+                              "name": "bsi:component:archive",
+                              "value": "archive"
+                            },
+                            {
+                              "name": "bsi:component:structured",
+                              "value": "structured"
+                            }
+                          ],
+                          "purl": "pkg:alpine/alpine/busybox@1.36.1-r5",
+                          "type": "library",
+                          "version": "1.36.1-r5"
+                        },
+                        {
+                          "bom-ref": "pkg:alpine/alpine/busybox-binsh@1.36.1-r5",
+                          "licenses": [
+                            {
+                              "license": {
+                                "id": "GPL-2.0-only",
+                                "text": {
+                                  "content": "xxx",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html"
+                              }
+                            }
+                          ],
+                          "name": "busybox-binsh",
+                          "properties": [
+                            {
+                              "name": "bsi:component:executable",
+                              "value": "executable"
+                            },
+                            {
+                              "name": "bsi:component:archive",
+                              "value": "archive"
+                            },
+                            {
+                              "name": "bsi:component:structured",
+                              "value": "structured"
+                            }
+                          ],
+                          "purl": "pkg:alpine/alpine/busybox-binsh@1.36.1-r5",
+                          "type": "library",
+                          "version": "1.36.1-r5"
+                        },
+                        {
+                          "bom-ref": "pkg:alpine/alpine/ca-certificates-bundle@20230506-r0",
+                          "licenses": [
+                            {
+                              "license": {
+                                "id": "MIT",
+                                "text": {
+                                  "content": "x+xx==",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://www.opensource.org/licenses/MIT"
+                              }
+                            },
+                            {
+                              "license": {
+                                "id": "MPL-2.0",
+                                "text": {
+                                  "content": "xxx=",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://opensource.org/licenses/MPL-2.0"
+                              }
+                            }
+                          ],
+                          "name": "ca-certificates-bundle",
+                          "properties": [
+                            {
+                              "name": "bsi:component:executable",
+                              "value": "executable"
+                            },
+                            {
+                              "name": "bsi:component:archive",
+                              "value": "archive"
+                            },
+                            {
+                              "name": "bsi:component:structured",
+                              "value": "structured"
+                            }
+                          ],
+                          "purl": "pkg:alpine/alpine/ca-certificates-bundle@20230506-r0",
+                          "type": "library",
+                          "version": "20230506-r0"
+                        },
+                        {
+                          "bom-ref": "pkg:docker/testing%3Asha256@e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7",
+                          "hashes": [
+                            {
+                              "alg": "SHA-256",
+                              "content": "e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7"
+                            }
+                          ],
+                          "licenses": [],
+                          "name": "testing:sha256",
+                          "purl": "pkg:docker/testing%3Asha256@e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7",
+                          "type": "container",
+                          "version": "e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7"
+                        },
+                        {
+                          "bom-ref": "pkg:docker/testing%3Asha256@821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5",
+                          "hashes": [
+                            {
+                              "alg": "SHA-256",
+                              "content": "821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5"
+                            }
+                          ],
+                          "licenses": [],
+                          "name": "testing:sha256",
+                          "purl": "pkg:docker/testing%3Asha256@821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5",
+                          "type": "container",
+                          "version": "821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5"
+                        },
+                        {
+                          "bom-ref": "pkg:docker/testing%3Asha256@9f8211a40dfac115e81dd0c68baa1262adc2c02378ed35bfa9b4476c9694b0ff",
+                          "hashes": [
+                            {
+                              "alg": "SHA-256",
+                              "content": "9f8211a40dfac115e81dd0c68baa1262adc2c02378ed35bfa9b4476c9694b0ff"
+                            }
+                          ],
+                          "licenses": [],
+                          "name": "testing:sha256",
+                          "purl": "pkg:docker/testing%3Asha256@9f8211a40dfac115e81dd0c68baa1262adc2c02378ed35bfa9b4476c9694b0ff",
+                          "type": "container",
+                          "version": "9f8211a40dfac115e81dd0c68baa1262adc2c02378ed35bfa9b4476c9694b0ff"
+                        },
+                        {
+                          "bom-ref": "pkg:docker/testing%3Asha256@170172070237944efd20eb50ae7a19b7042ed87bf75f9823922b8326d471eb61",
+                          "hashes": [
+                            {
+                              "alg": "SHA-256",
+                              "content": "170172070237944efd20eb50ae7a19b7042ed87bf75f9823922b8326d471eb61"
+                            }
+                          ],
+                          "licenses": [],
+                          "name": "testing:sha256",
+                          "purl": "pkg:docker/testing%3Asha256@170172070237944efd20eb50ae7a19b7042ed87bf75f9823922b8326d471eb61",
+                          "type": "container",
+                          "version": "170172070237944efd20eb50ae7a19b7042ed87bf75f9823922b8326d471eb61"
+                        },
+                        {
+                          "bom-ref": "pkg:pypi/jfrog-python-example@1.10",
+                          "hashes": [
+                            {
+                              "alg": "SHA-256",
+                              "content": "b0ad4d61db24fde23cbbd99a345bdd3614239f6b66c184b801e0906d037617f1"
+                            }
+                          ],
+                          "licenses": [],
+                          "name": "jfrog-python-example",
+                          "purl": "pkg:pypi/jfrog-python-example@1.10",
+                          "type": "application",
+                          "version": "1.10"
+                        },
+                        {
+                          "bom-ref": "pkg:alpine/alpine/libc-utils@0.7.2-r5",
+                          "licenses": [
+                            {
+                              "license": {
+                                "id": "BSD-3-Clause",
+                                "text": {
+                                  "content": "xxx=",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://opensource.org/licenses/BSD-3-Clause"
+                              }
+                            },
+                            {
+                              "license": {
+                                "id": "BSD-2-Clause",
+                                "text": {
+                                  "content": "xxx==",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://opensource.org/licenses/BSD-2-Clause"
+                              }
+                            }
+                          ],
+                          "name": "libc-utils",
+                          "properties": [
+                            {
+                              "name": "bsi:component:executable",
+                              "value": "executable"
+                            },
+                            {
+                              "name": "bsi:component:archive",
+                              "value": "archive"
+                            },
+                            {
+                              "name": "bsi:component:structured",
+                              "value": "structured"
+                            }
+                          ],
+                          "purl": "pkg:alpine/alpine/libc-utils@0.7.2-r5",
+                          "type": "library",
+                          "version": "0.7.2-r5"
+                        },
+                        {
+                          "bom-ref": "pkg:alpine/alpine/libcrypto3@3.1.4-r5",
+                          "licenses": [
+                            {
+                              "license": {
+                                "id": "Apache-2.0",
+                                "text": {
+                                  "content": "xxx=",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://licenses.nuget.org/Apache-2.0"
+                              }
+                            }
+                          ],
+                          "name": "libcrypto3",
+                          "properties": [
+                            {
+                              "name": "bsi:component:executable",
+                              "value": "executable"
+                            },
+                            {
+                              "name": "bsi:component:archive",
+                              "value": "archive"
+                            },
+                            {
+                              "name": "bsi:component:structured",
+                              "value": "structured"
+                            }
+                          ],
+                          "purl": "pkg:alpine/alpine/libcrypto3@3.1.4-r5",
+                          "type": "library",
+                          "version": "3.1.4-r5"
+                        },
+                        {
+                          "bom-ref": "pkg:alpine/alpine/libssl3@3.1.4-r5",
+                          "licenses": [
+                            {
+                              "license": {
+                                "id": "Apache-2.0",
+                                "text": {
+                                  "content": "xxx=",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://licenses.nuget.org/Apache-2.0"
+                              }
+                            }
+                          ],
+                          "name": "libssl3",
+                          "properties": [
+                            {
+                              "name": "bsi:component:executable",
+                              "value": "executable"
+                            },
+                            {
+                              "name": "bsi:component:archive",
+                              "value": "archive"
+                            },
+                            {
+                              "name": "bsi:component:structured",
+                              "value": "structured"
+                            }
+                          ],
+                          "purl": "pkg:alpine/alpine/libssl3@3.1.4-r5",
+                          "type": "library",
+                          "version": "3.1.4-r5"
+                        },
+                        {
+                          "bom-ref": "pkg:alpine/alpine/musl@1.2.4-r2",
+                          "licenses": [
+                            {
+                              "license": {
+                                "id": "MIT",
+                                "text": {
+                                  "content": "xxx==",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://www.opensource.org/licenses/MIT"
+                              }
+                            }
+                          ],
+                          "name": "musl",
+                          "properties": [
+                            {
+                              "name": "bsi:component:executable",
+                              "value": "executable"
+                            },
+                            {
+                              "name": "bsi:component:archive",
+                              "value": "archive"
+                            },
+                            {
+                              "name": "bsi:component:structured",
+                              "value": "structured"
+                            }
+                          ],
+                          "purl": "pkg:alpine/alpine/musl@1.2.4-r2",
+                          "type": "library",
+                          "version": "1.2.4-r2"
+                        },
+                        {
+                          "bom-ref": "pkg:alpine/alpine/musl-utils@1.2.4-r2",
+                          "licenses": [
+                            {
+                              "license": {
+                                "id": "MIT",
+                                "text": {
+                                  "content": "TUlUIExpY2Vuc2UKCkNvcHlyaWdodCAoYykgPHllYXI+xx==",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://www.opensource.org/licenses/MIT"
+                              }
+                            },
+                            {
+                              "license": {
+                                "id": "BSD-2-Clause",
+                                "text": {
+                                  "content": "xxx==",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://opensource.org/licenses/BSD-2-Clause"
+                              }
+                            },
+                            {
+                              "license": {
+                                "id": "GPL-2.0-or-later",
+                                "text": {
+                                  "content": "xxx",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html"
+                              }
+                            }
+                          ],
+                          "name": "musl-utils",
+                          "properties": [
+                            {
+                              "name": "bsi:component:executable",
+                              "value": "executable"
+                            },
+                            {
+                              "name": "bsi:component:archive",
+                              "value": "archive"
+                            },
+                            {
+                              "name": "bsi:component:structured",
+                              "value": "structured"
+                            }
+                          ],
+                          "purl": "pkg:alpine/alpine/musl-utils@1.2.4-r2",
+                          "type": "library",
+                          "version": "1.2.4-r2"
+                        },
+                        {
+                          "bom-ref": "pkg:alpine/alpine/scanelf@1.3.7-r1",
+                          "licenses": [
+                            {
+                              "license": {
+                                "id": "GPL-2.0-only",
+                                "text": {
+                                  "content": "xxx",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html"
+                              }
+                            }
+                          ],
+                          "name": "scanelf",
+                          "properties": [
+                            {
+                              "name": "bsi:component:executable",
+                              "value": "executable"
+                            },
+                            {
+                              "name": "bsi:component:archive",
+                              "value": "archive"
+                            },
+                            {
+                              "name": "bsi:component:structured",
+                              "value": "structured"
+                            }
+                          ],
+                          "purl": "pkg:alpine/alpine/scanelf@1.3.7-r1",
+                          "type": "library",
+                          "version": "1.3.7-r1"
+                        },
+                        {
+                          "bom-ref": "pkg:alpine/alpine/ssl_client@1.36.1-r5",
+                          "licenses": [
+                            {
+                              "license": {
+                                "id": "GPL-2.0-only",
+                                "text": {
+                                  "content": "xxx",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html"
+                              }
+                            }
+                          ],
+                          "name": "ssl_client",
+                          "properties": [
+                            {
+                              "name": "bsi:component:executable",
+                              "value": "executable"
+                            },
+                            {
+                              "name": "bsi:component:archive",
+                              "value": "archive"
+                            },
+                            {
+                              "name": "bsi:component:structured",
+                              "value": "structured"
+                            }
+                          ],
+                          "purl": "pkg:alpine/alpine/ssl_client@1.36.1-r5",
+                          "type": "library",
+                          "version": "1.36.1-r5"
+                        },
+                        {
+                          "bom-ref": "pkg:appversion/testapp1@1.0.0",
+                          "licenses": [],
+                          "name": "testapp1",
+                          "purl": "pkg:appversion/testapp1@1.0.0",
+                          "type": "application",
+                          "version": "1.0.0"
+                        },
+                        {
+                          "bom-ref": "pkg:alpine/alpine/zlib@1.2.13-r1",
+                          "licenses": [
+                            {
+                              "license": {
+                                "id": "Zlib",
+                                "text": {
+                                  "content": "xxx==",
+                                  "contentType": "text/plain",
+                                  "encoding": "base64"
+                                },
+                                "url": "http://www.opensource.org/licenses/Zlib"
+                              }
+                            }
+                          ],
+                          "name": "zlib",
+                          "properties": [
+                            {
+                              "name": "bsi:component:executable",
+                              "value": "executable"
+                            },
+                            {
+                              "name": "bsi:component:archive",
+                              "value": "archive"
+                            },
+                            {
+                              "name": "bsi:component:structured",
+                              "value": "structured"
+                            }
+                          ],
+                          "purl": "pkg:alpine/alpine/zlib@1.2.13-r1",
+                          "type": "library",
+                          "version": "1.2.13-r1"
                         }
-                    ]
+                      ],
+                      "dependencies": [],
+                      "metadata": {
+                        "component": {
+                          "name": "[my-project-application-versions]/testapp1",
+                          "purl": "pkg:appVersion/%5Bmy-project-application-versions%5D%2Ftestapp1@1.0.0",
+                          "type": "application",
+                          "version": "1.0.0"
+                        },
+                        "timestamp": "2026-02-12T06:41:07Z",
+                        "tools": [
+                          {
+                            "name": "Xray",
+                            "vendor": "JFrog Inc.",
+                            "version": "3.138.2"
+                          }
+                        ]
+                      },
+                      "serialNumber": "urn:uuid:20607b60-6e40-4899-8267-40e83660d75f",
+                      "specVersion": "1.6",
+                      "version": 1
+                    },
+                    "predicateCategory": "Custom",
+                    "predicateSlug": "cyclonedx-sbom",
+                    "predicateType": "https://jfrog.com/evidence/cyclonedx/sbom/v1.6",
+                    "providerId": "jfrog",
+                    "signingKey": {
+                      "alias": "default-lifecycle-key",
+                      "publicKey": "----------BEGIN PGP PUBLIC KEY BLOCK----END PGP PUBLIC KEY BLOCK-----\n"
+                    },
+                    "verified": true
+                  }
                 },
-                "artifactsConnection": {
-                    "edges": [
+                {
+                  "node": {
+                    "createdAt": "2026-02-12T06:44:14.334Z",
+                    "evidenceId": "45c282ec02f04b813f32...",
+                    "predicate": {
+                      "baseUrl": "https://myorg.jfrog.io",
+                      "createdBy": "token:myuser@myorg.com",
+                      "mutable": false,
+                      "serviceId": "jfrt@xxx",
+                      "target": {
+                        "environment": "DEV",
+                        "excludedRepositoryKeys": [],
+                        "includedRepositoryKeys": [
+                          "my-project-python-local",
+                          "my-project-docker-local"
+                        ]
+                      },
+                      "timestamp": "2026-02-12T06:44:14.334Z"
+                    },
+                    "predicateCategory": "Workflow",
+                    "predicateSlug": "promotion",
+                    "predicateType": "https://jfrog.com/evidence/promotion/v1",
+                    "providerId": "jfrog",
+                    "signingKey": {
+                      "alias": "default-lifecycle-key",
+                      "publicKey": "----------BEGIN PGP PUBLIC KEY BLOCK----END PGP PUBLIC KEY BLOCK-----\n"
+                    },
+                    "verified": true
+                  }
+                },
+                {
+                  "node": {
+                    "createdAt": "2026-02-12T07:10:06.341Z",
+                    "evidenceId": "c2bf9f0ca6f551563d6c4cf289c93763f6539a4aa869c6a36da1d9ef3f2efcf8",
+                    "predicate": {
+                      "application_key": "testapp1",
+                      "application_name": "test-app1",
+                      "evaluated_at": "2026-02-12T07:10:06Z",
+                      "evaluated_by": "myuser@myorg.com",
+                      "evaluation_id": "2021844241458274304",
+                      "gate_name": "exit",
+                      "message": "Evidence created for application testapp1 version 1.0.0 at stage DEV",
+                      "outcome": "passed",
+                      "policy_results": [
                         {
-                            "node": {
-                                "evidenceConnection": {
-                                    "edges": [
-                                        {
-                                            "node": {
-                                                "predicate": {
-                                                    "runDetails": {
-                                                        "builder": {
-                                                            "id": "https://github.com/myorg/myrepo/.github/workflows/test-ctoa.yml@refs/heads/main"
-                                                        },
-                                                        "metadata": {
-                                                            "invocationId": "https://github.com/myorg/myrepo/actions/runs/21438769641/attempts/1"
-                                                        }
-                                                    },
-                                                    "buildDefinition": {
-                                                        "buildType": "https://actions.github.io/buildtypes/workflow/v1",
-                                                        "externalParameters": {
-                                                            "workflow": {
-                                                                "ref": "refs/heads/main",
-                                                                "path": ".github/workflows/test-workflow.yml",
-                                                                "repository": "https://github.com/myorg/myrepo
-                                                            }
-                                                        },
-                                                        "internalParameters": {
-                                                            "github": {
-                                                                "event_name": "push",
-                                                                "repository_id": "791673954",
-                                                                "runner_environment": "github-hosted",
-                                                                "repository_owner_id": "78722358"
-                                                            }
-                                                        },
-                                                        "resolvedDependencies": [
-                                                            {
-                                                                "uri": "git+https://github.com/myorg/myrepo@refs/heads/main",
-                                                                "digest": {
-                                                                    "gitCommit": "6da2fea6bae173b592e4d017a7c468fb7a36290a"
-                                                                }
-                                                            }
-                                                        ]
-                                                    }
-                                                },
-                                                "predicateSlug": "slsa-provenance",
-                                                "predicateType": "https://slsa.dev/provenance/v1",
-                                                "predicateCategory": "Workflow"
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        },
-                        {
-                            "node": {
-                                "evidenceConnection": {
-                                    "edges": null
-                                }
-                            }
+                          "policy_decision": "pass",
+                          "policy_id": "2021843369202425856",
+                          "policy_name": "slsaprovenancepolicy",
+                          "resources_evaluated": {
+                            "fail": 0,
+                            "pass": 1,
+                            "warn": 0
+                          },
+                          "rule_category": "workflow",
+                          "rule_name": "slsaprovenancerule"
                         }
-                    ]
+                      ],
+                      "project_key": "my-project",
+                      "stage_name": "DEV",
+                      "version": "1.0.0"
+                    },
+                    "predicateCategory": "Custom",
+                    "predicateSlug": "apptrust-gate-certify",
+                    "predicateType": "https://jfrog.com/evidence/apptrust/gate-certify/v1",
+                    "providerId": "jfrog",
+                    "signingKey": {
+                      "alias": "default-lifecycle-key",
+                      "publicKey": "-----BEGIN PGP PUBLIC KEY BLOCK-----\nVersion: BCPG v1.83\n\xxx/sPcuw/xxx\n-----END PGP PUBLIC KEY BLOCK-----\n"
+                    },
+                    "verified": true
+                  }
+                },
+                {
+                  "node": {
+                    "createdAt": "2026-02-12T07:10:06.887Z",
+                    "evidenceId": "a461b4d4c469c1b71a8146d32a0bd7fb2ec75424a2a1f15568dce6baccd694e5",
+                    "predicate": {
+                      "baseUrl": "https://myorg.jfrog.io",
+                      "createdBy": "token:myuser@myorg.com",
+                      "mutable": false,
+                      "serviceId": "jfrt@01kdqzsneb6ayb1v85sw231ees",
+                      "target": {
+                        "environment": "my-project-STG",
+                        "excludedRepositoryKeys": [],
+                        "includedRepositoryKeys": [
+                          "my-project-docker-stg",
+                          "my-project-stg-python"
+                        ]
+                      },
+                      "timestamp": "2026-02-12T07:10:06.887Z"
+                    },
+                    "predicateCategory": "Workflow",
+                    "predicateSlug": "promotion",
+                    "predicateType": "https://jfrog.com/evidence/promotion/v1",
+                    "providerId": "jfrog",
+                    "signingKey": {
+                      "alias": "default-lifecycle-key",
+                      "publicKey": "----------BEGIN PGP PUBLIC KEY BLOCK----END PGP PUBLIC KEY BLOCK-----\n"
+                    },
+                    "verified": true
+                  }
+                },
+                {
+                  "node": {
+                    "createdAt": "2026-02-16T09:55:56.927Z",
+                    "evidenceId": "77345db895195e928db0d11fa5542d257dab1910b7f68c1906b6d60c4c708392",
+                    "predicate": {
+                      "baseUrl": "https://myorg.jfrog.io",
+                      "createdBy": "myuser",
+                      "mutable": false,
+                      "serviceId": "jfrt@01kdqzsneb6ayb1v85sw231ees",
+                      "target": {
+                        "environment": "PROD",
+                        "excludedRepositoryKeys": [],
+                        "includedRepositoryKeys": [
+                          "my-project-python-prod",
+                          "my-project-docker-prod"
+                        ]
+                      },
+                      "timestamp": "2026-02-16T09:55:56.927Z"
+                    },
+                    "predicateCategory": "Workflow",
+                    "predicateSlug": "promotion",
+                    "predicateType": "https://jfrog.com/evidence/promotion/v1",
+                    "providerId": "jfrog",
+                    "signingKey": {
+                      "alias": "default-lifecycle-key",
+                      "publicKey": "----------BEGIN PGP PUBLIC KEY BLOCK----END PGP PUBLIC KEY BLOCK-----\n"
+                    },
+                    "verified": true
+                  }
                 }
+              ]
             }
+          },
+          "releasables": {
+            "releasablesConnection": {
+              "edges": [
+                {
+                  "node": {
+                    "artifacts": [
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": [
+                              {
+                                "node": {
+                                  "createdAt": "2026-01-28T12:47:13.048Z",
+                                  "evidenceId": "ae3ad65ea44da6b1bc4c69510e6b027862bc39623095b1f32038d7cd94db5a54",
+                                  "predicate": {
+                                    "buildDefinition": {
+                                      "buildType": "https://actions.github.io/buildtypes/workflow/v1",
+                                      "externalParameters": {
+                                        "workflow": {
+                                          "path": ".github/workflows/test.yml",
+                                          "ref": "refs/heads/main",
+                                          "repository": "https://github.com/myorg/testing"
+                                        }
+                                      },
+                                      "internalParameters": {
+                                        "github": {
+                                          "event_name": "push",
+                                          "repository_id": "791673954",
+                                          "repository_owner_id": "78722358",
+                                          "runner_environment": "github-hosted"
+                                        }
+                                      },
+                                      "resolvedDependencies": [
+                                        {
+                                          "digest": {
+                                            "gitCommit": "6da2fea6bae173b592e4d017a7c468fb7a36290a"
+                                          },
+                                          "uri": "git+https://github.com/myorg/testing@refs/heads/main"
+                                        }
+                                      ]
+                                    },
+                                    "runDetails": {
+                                      "builder": {
+                                        "id": "https://github.com/myorg/testing/.github/workflows/test.yml@refs/heads/main"
+                                      },
+                                      "metadata": {
+                                        "invocationId": "https://github.com/myorg/testing/actions/runs/21438769641/attempts/1"
+                                      }
+                                    }
+                                  },
+                                  "predicateCategory": "Workflow",
+                                  "predicateSlug": "slsa-provenance",
+                                  "predicateType": "https://slsa.dev/provenance/v1",
+                                  "providerId": "github",
+                                  "signingKey": null,
+                                  "verified": true
+                                }
+                              },
+                              {
+                                "node": {
+                                  "createdAt": "2026-02-11T16:07:30.504Z",
+                                  "evidenceId": "9aedf220d81e0aa7c167a6f9b9030488644af182f267bc8876e03ef0c6afba1f",
+                                  "predicate": {
+                                    "gates": [
+                                      {
+                                        "conditions": [
+                                          {
+                                            "actualValue": "1",
+                                            "comparator": "GT",
+                                            "errorThreshold": "1",
+                                            "metricKey": "new_reliability_rating",
+                                            "status": "OK"
+                                          },
+                                          {
+                                            "actualValue": "1",
+                                            "comparator": "GT",
+                                            "errorThreshold": "1",
+                                            "metricKey": "new_security_rating",
+                                            "status": "OK"
+                                          },
+                                          {
+                                            "actualValue": "1",
+                                            "comparator": "GT",
+                                            "errorThreshold": "1",
+                                            "metricKey": "new_maintainability_rating",
+                                            "status": "OK"
+                                          },
+                                          {
+                                            "actualValue": "0.0",
+                                            "comparator": "GT",
+                                            "errorThreshold": "3",
+                                            "metricKey": "new_duplicated_lines_density",
+                                            "status": "OK"
+                                          },
+                                          {
+                                            "actualValue": "0.0",
+                                            "comparator": "LT",
+                                            "errorThreshold": "0",
+                                            "metricKey": "new_security_hotspots_reviewed",
+                                            "status": "OK"
+                                          }
+                                        ],
+                                        "ignoredConditions": false,
+                                        "status": "OK",
+                                        "type": "QUALITY"
+                                      }
+                                    ]
+                                  },
+                                  "predicateCategory": "Custom",
+                                  "predicateSlug": "sonarsource-sonarqube",
+                                  "predicateType": "https://sonarsource.com/evidence/sonarqube/v1",
+                                  "providerId": "",
+                                  "signingKey": {
+                                    "alias": "snow2",
+                                    "publicKey": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwRcU51e5YIDvT7U42L4T\niqO8jAo4NISu8nYAbMsCkCiZQ20GaSVoNuTPj6kF5jqRbUka+SIrb1LHaAzDJN25\nLJdO1KuWGEsydAYU6YPrVq9XUwK7bezq5vy+Ltxs4RQjWoOBuNofh6ciXG5Ff5qz\nPfaKCWUEhnAYgBpX8s7alX3gsspvSY/W4Ndca3eEFbgt5JE1pWA3HYhpPIMq8vuO\nND3FAKqrKenlH+yyh8DXsEnTgbFyWVd+H1OrlxsNYx31yZuFuO5101y7peZB8Ttf\nI1Vg+iO6oJMApLpLnKddWL6Pg9avOFED5y8MzKRNlonz4/unZqbFJCQl7OmVWp6r\nrQIDAQAB\n-----END PUBLIC KEY-----"
+                                  },
+                                  "verified": true
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "filePath": "testing/5/list.manifest.json",
+                        "sha256": "bf02510c8ce0b804a099797510afc19325acfb979538c5b521304c83cde63892"
+                      }
+                    ],
+                    "name": "testing",
+                    "packageType": "docker",
+                    "version": "5"
+                  }
+                },
+                {
+                  "node": {
+                    "artifacts": [
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7/manifest.json",
+                        "sha256": "e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7"
+                      },
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7/sha256__08c68b562ed431ef1f55de12f561720f310d63314145e69c6eafb996f81a6249",
+                        "sha256": "08c68b562ed431ef1f55de12f561720f310d63314145e69c6eafb996f81a6249"
+                      },
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7/sha256__4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+                        "sha256": "4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1"
+                      },
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7/sha256__619be1103602d98e1963557998c954c892b3872986c27365e9f651f5bc27cab8",
+                        "sha256": "619be1103602d98e1963557998c954c892b3872986c27365e9f651f5bc27cab8"
+                      },
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7/sha256__8c9ae751eea8e2c5d277f54e1b26ceefe80011b103119f9cdadf9e2bc7956d72",
+                        "sha256": "8c9ae751eea8e2c5d277f54e1b26ceefe80011b103119f9cdadf9e2bc7956d72"
+                      },
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7/sha256__900ef839e5f859b5e0a393fe82ced664d707025418c234d47b24a52962a7d614",
+                        "sha256": "900ef839e5f859b5e0a393fe82ced664d707025418c234d47b24a52962a7d614"
+                      },
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7/sha256__bb883abd3f592963fec2e078882b77a5b104200f65d2973ef0934763246b6f43",
+                        "sha256": "bb883abd3f592963fec2e078882b77a5b104200f65d2973ef0934763246b6f43"
+                      }
+                    ],
+                    "name": "testing",
+                    "packageType": "docker",
+                    "version": "sha256__e103c0f6cb3feea1df0bc4cf501c6e8569c7a7727860f4d38064868f38e3a2b7"
+                  }
+                },
+                {
+                  "node": {
+                    "artifacts": [
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5/sha256__08c68b562ed431ef1f55de12f561720f310d63314145e69c6eafb996f81a6249",
+                        "sha256": "08c68b562ed431ef1f55de12f561720f310d63314145e69c6eafb996f81a6249"
+                      },
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5/sha256__4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+                        "sha256": "4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1"
+                      },
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5/manifest.json",
+                        "sha256": "821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5"
+                      },
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5/sha256__71aa6e98a8e135fc19faea74807fba983aa2d4c48c524d2c869049417b2c0c08",
+                        "sha256": "71aa6e98a8e135fc19faea74807fba983aa2d4c48c524d2c869049417b2c0c08"
+                      },
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5/sha256__900ef839e5f859b5e0a393fe82ced664d707025418c234d47b24a52962a7d614",
+                        "sha256": "900ef839e5f859b5e0a393fe82ced664d707025418c234d47b24a52962a7d614"
+                      },
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5/sha256__bb883abd3f592963fec2e078882b77a5b104200f65d2973ef0934763246b6f43",
+                        "sha256": "bb883abd3f592963fec2e078882b77a5b104200f65d2973ef0934763246b6f43"
+                      },
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5/sha256__c6b39de5b33961661dc939b997cc1d30cda01e38005a6c6625fd9c7e748bab44",
+                        "sha256": "c6b39de5b33961661dc939b997cc1d30cda01e38005a6c6625fd9c7e748bab44"
+                      }
+                    ],
+                    "name": "testing",
+                    "packageType": "docker",
+                    "version": "sha256__821ab4d1a4913b587f8999104f2c21a861e839a3e47611628edf0102be4684f5"
+                  }
+                },
+                {
+                  "node": {
+                    "artifacts": [
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:9f8211a40dfac115e81dd0c68baa1262adc2c02378ed35bfa9b4476c9694b0ff/manifest.json",
+                        "sha256": "9f8211a40dfac115e81dd0c68baa1262adc2c02378ed35bfa9b4476c9694b0ff"
+                      },
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:9f8211a40dfac115e81dd0c68baa1262adc2c02378ed35bfa9b4476c9694b0ff/sha256__8b6012b8c7ae4fa34d2d8827d9bfba781d98104bf7dcad9fc8657972a1c7e2c0",
+                        "sha256": "8b6012b8c7ae4fa34d2d8827d9bfba781d98104bf7dcad9fc8657972a1c7e2c0"
+                      },
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:9f8211a40dfac115e81dd0c68baa1262adc2c02378ed35bfa9b4476c9694b0ff/sha256__8d11fcf794734ce1a8ed54390860ffc9006421e0dfa37eedd01a5e0ef0521492",
+                        "sha256": "8d11fcf794734ce1a8ed54390860ffc9006421e0dfa37eedd01a5e0ef0521492"
+                      }
+                    ],
+                    "name": "testing",
+                    "packageType": "docker",
+                    "version": "sha256__9f8211a40dfac115e81dd0c68baa1262adc2c02378ed35bfa9b4476c9694b0ff"
+                  }
+                },
+                {
+                  "node": {
+                    "artifacts": [
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:170172070237944efd20eb50ae7a19b7042ed87bf75f9823922b8326d471eb61/manifest.json",
+                        "sha256": "170172070237944efd20eb50ae7a19b7042ed87bf75f9823922b8326d471eb61"
+                      },
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:170172070237944efd20eb50ae7a19b7042ed87bf75f9823922b8326d471eb61/sha256__014a9e809c1ff3a0ded5c997e98c2fa6bd84f43cd858755d65a4930a3625fc55",
+                        "sha256": "014a9e809c1ff3a0ded5c997e98c2fa6bd84f43cd858755d65a4930a3625fc55"
+                      },
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "testing/sha256:170172070237944efd20eb50ae7a19b7042ed87bf75f9823922b8326d471eb61/sha256__e10913ca0906f5e68b51e6dac5b22e44938c66210d123d0c3886051f9f83bd24",
+                        "sha256": "e10913ca0906f5e68b51e6dac5b22e44938c66210d123d0c3886051f9f83bd24"
+                      }
+                    ],
+                    "name": "testing",
+                    "packageType": "docker",
+                    "version": "sha256__170172070237944efd20eb50ae7a19b7042ed87bf75f9823922b8326d471eb61"
+                  }
+                },
+                {
+                  "node": {
+                    "artifacts": [
+                      {
+                        "evidenceSubject": {
+                          "evidenceConnection": {
+                            "edges": null
+                          }
+                        },
+                        "filePath": "example-projects/dist/jfrog_python_example-1.10-py3-none-any.whl",
+                        "sha256": "abcce7f7cd876ad9ed31ef7633a29d6333a369d90cb1d7d4f6fbf27414cc586d"
+                      }
+                    ],
+                    "name": "jfrog-python-example",
+                    "packageType": "pypi",
+                    "version": "1.10"
+                  }
+                }
+              ]
+            },
+            "releasablesCount": 6
+          },
+          "sources": [
+            {
+              "__typename": "ApplicationVersionSourceDirect"
             }
+          ],
+          "status": "COMPLETED",
+          "version": "1.0.0"
+        }
+      }
+    }
+  }
